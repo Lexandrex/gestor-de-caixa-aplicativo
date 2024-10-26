@@ -5,7 +5,6 @@ import 'package:flutter_application_1/fornecedor.dart';
 import 'package:flutter_application_1/relatorio2.dart';
 import 'package:flutter_application_1/troca.dart';
 
-
 void main() => runApp(const Atividade());
 
 class Atividade extends StatelessWidget {
@@ -36,6 +35,41 @@ class _Tela1State extends State<Tela1> {
     });
   }
 
+  void _navigateToGastos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const Gastos()),
+    );
+  }
+
+  void _navigateToFornecedor() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const fornecedor()),
+    );
+  }
+
+  void _navigateToFechamento() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const fechamento()),
+    );
+  }
+
+  void _navigateToTroca() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const TROCA()),
+    );
+  }
+
+  void _navigateToRelatorio2() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RELATORIO2()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,8 +85,7 @@ class _Tela1State extends State<Tela1> {
         backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu,
-          color: Colors.white,),
+          icon: const Icon(Icons.menu, color: Colors.white),
           onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
         ),
       ),
@@ -66,31 +99,19 @@ class _Tela1State extends State<Tela1> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Gastos()),
-                        ),// Ação da Opção 1
+                    onPressed: _navigateToGastos,
                     child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const fornecedor()),
-                        ), // Ação da Opção 2
+                    onPressed: _navigateToFornecedor,
                     child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const fechamento()),
-                        ),  // Ação da Opção 3
+                    onPressed: _navigateToFechamento,
                     child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const TROCA()),
-                        ), // Ação da Opção 4
+                    onPressed: _navigateToTroca,
                     child: const Text('TROCA', style: TextStyle(color: Colors.white)),
                   ),
                 ],
@@ -99,35 +120,44 @@ class _Tela1State extends State<Tela1> {
           Expanded(
             child: Center(
               child: Column(
-        
                 children: [
-                  Padding(padding: EdgeInsets.all(8.0)),
-                  Text(
+                  const Padding(padding: EdgeInsets.all(8.0)),
+                  const Text(
                     "ANO",
-                    style: TextStyle(
-                        fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
+                    style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
                   ),
                   const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          "MÊS",
-                          style: TextStyle(
-                              fontSize: 40,
-                              color: Color.fromARGB(255, 255, 255, 255)),
-                        ),
-                      ]),
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        "MÊS",
+                        style: TextStyle(fontSize: 40, color: Color.fromARGB(255, 255, 255, 255)),
+                      ),
+                    ],
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                            fixedSize: const Size(331, 73),
-                            backgroundColor: const Color.fromARGB(255, 83, 79, 79)),
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const RELATORIO2()),
+                          fixedSize: const Size(331, 73),
+                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
                         ),
+                        onPressed: _navigateToRelatorio2,
+                        child: null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          fixedSize: const Size(331, 73),
+                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+                        ),
+                        onPressed: _navigateToRelatorio2,
                         child: null,
                       ),
                     ],
@@ -141,4 +171,3 @@ class _Tela1State extends State<Tela1> {
     );
   }
 }
-

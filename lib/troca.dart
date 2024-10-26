@@ -1,73 +1,106 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/fechamento.dart';
+import 'package:flutter_application_1/fornecedor.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/gastos.dart';
+import 'package:flutter_application_1/troca2.dart';
 
-
-class  TROCA extends StatefulWidget {
-  const  TROCA({super.key});
+class TROCA extends StatefulWidget {
+  const TROCA({super.key});
 
   @override
   _TROCAState createState() => _TROCAState();
 }
 
 class _TROCAState extends State<TROCA> {
-  bool _isExpanded = false; // Estado para controlar a expansão da AppBar
+  bool _isExpanded = false;
 
   void _toggleExpansion() {
     setState(() {
-      _isExpanded = !_isExpanded; // Alterna o estado de expansão
+      _isExpanded = !_isExpanded;
     });
   }
 
+  void _navigateToTela1() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const Tela1()),
+    );
+  }
+
+  void _navigateToGastos() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const Gastos()),
+    );
+  }
+
+  void _navigateToFornecedor() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const fornecedor()),
+    );
+  }
+
+  void _navigateToFechamento() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const fechamento()),
+    );
+  }
+  
+  void _navigateToTrocaEdicao() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const Troca2()),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF393636), // Cor de fundo igual à Tela1
+      backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
         title: const Padding(
-          padding: EdgeInsets.all(8.0), // Adiciona padding ao título
+          padding: EdgeInsets.all(8.0),
           child: Text(
-            'TROCA', // Título igual ao da Tela1
+            'TROCAS',
             style: TextStyle(
-              color: Color.fromARGB(255, 255, 255, 255),
+              color: Colors.white,
               fontSize: 40,
             ),
           ),
         ),
-        backgroundColor: const Color(0xFF20805F), // Cor de fundo igual à Tela1
+        backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu,
-          color: Colors.white),
-          onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: _toggleExpansion,
         ),
       ),
       body: Column(
         children: [
-          if (_isExpanded) // Exibe as opções se estiver expandido
+          if (_isExpanded)
             Container(
               color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(8.0), // Padding ao redor do Container
+              padding: const EdgeInsets.all(2.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Tela1()),
-                        ), // Ação da Opção 1
+                    onPressed: _navigateToTela1,
                     child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Gastos()),
-                        ), // Ação da Opção 2
+                    onPressed: _navigateToGastos,
                     child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
-                    onPressed: () {}, // Ação da Opção 3
-                    child: const Text('Opção 3', style: TextStyle(color: Colors.white)),
+                    onPressed: _navigateToFornecedor,
+                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
+                  ),
+                  TextButton(
+                    onPressed: _navigateToFechamento,
+                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
@@ -75,39 +108,138 @@ class _TROCAState extends State<TROCA> {
           Expanded(
             child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Padding(padding: EdgeInsets.all(8.0)),
-                  const Text(
-                    "ANO",
-                    style: TextStyle(
-                        fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
-                  ),
+                  const Padding(padding: EdgeInsets.all(8.0)),
                   const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text(
-                          "MÊS",
-                          style: TextStyle(
-                              fontSize: 40,
-                              color: Color.fromARGB(255, 255, 255, 255)),
-                        ),
-                      ]),
-                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            fixedSize: const Size(331, 73),
-                            backgroundColor: const Color.fromARGB(255, 83, 79, 79)),
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Tela1()),
-                        ),
-                        child: const Text('Ir para Tela 1'), // Adicione um texto ao botão
+                      Text(
+                        "DIA",
+                        style: TextStyle(fontSize: 40, color: Colors.white),
                       ),
                     ],
                   ),
+                  Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF20805F), width: 2),
+                          fixedSize: const Size(100, 50),
+                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+                        ),
+                        child: const Text(
+                          "TODOS",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Table (
+                    children: [
+                      TableRow(
+                        decoration: const BoxDecoration(
+                          border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
+                          color: Color.fromARGB(255, 83, 79, 79),
+                        ),
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: const Text("12,00", style: TextStyle(color: Colors.white)),
+                          ),
+                          Container(
+                            width: 100,
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: const Text("20,00", style: TextStyle(color: Colors.white)),
+                          ),
+                          Container(
+                            width: 100,
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: const Text("TOTAL", style: TextStyle(color: Colors.white)),
+                          ),
+                          Container(
+                            width: 100,
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: const Text("HORA", style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    width: 410,
+                    height: 300,
+                    color: const Color.fromARGB(255, 83, 79, 79),
+                  ),
+                  Table(
+                    children: [
+                      TableRow(
+                        decoration: const BoxDecoration(
+                          border: Border(top: BorderSide(color: Colors.white, width: 2.0)),
+                          color: Color.fromARGB(255, 83, 79, 79),
+                        ),
+                        children: [
+                          Container(
+                            child: null,
+                          ),
+                          Container(
+                            child: null,
+                          ),
+                          Container(
+                            child: null,
+                          ),
+                          Container(
+                            width: 100,
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: const Text("TOTAL", style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: _navigateToTrocaEdicao,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 14),
+                            width: 75,
+                            height: 75,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: 75,
+                                  height: 75,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Color(0xFF20805F),
+                                  ),
+                                ),
+                                const Positioned(
+                                  top: 25,
+                                  left: 25,
+                                  child: Icon(
+                                    Icons.edit,
+                                    size: 25,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                  )
                 ],
               ),
             ),

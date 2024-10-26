@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/gastos.dart';
 import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/troca.dart';
+import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/gastos.dart';
+import 'package:flutter_application_1/troca3.dart';
 
-class RELATORIO2 extends StatefulWidget {
-  const RELATORIO2({super.key});
+
+class Troca2 extends StatefulWidget {
+  const Troca2({super.key});
 
   @override
-  _RELATORIO2State createState() => _RELATORIO2State();
+  _Troca2State createState() => _Troca2State();
 }
 
-class _RELATORIO2State extends State<RELATORIO2> {
-  bool _isExpanded = false; // Estado para controlar a expansão da AppBar
+class _Troca2State extends State<Troca2> {
+  bool _isExpanded = false;
 
   void _toggleExpansion() {
     setState(() {
-      _isExpanded = !_isExpanded; // Alterna o estado de expansão
+      _isExpanded = !_isExpanded;
     });
+  }
+
+  void _navigateToTela1() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const Tela1()),
+    );
   }
 
   void _navigateToGastos() {
@@ -41,13 +50,13 @@ class _RELATORIO2State extends State<RELATORIO2> {
     );
   }
 
-  void _navigateToTroca() {
+  void _navigateToTroca3() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
+      MaterialPageRoute(builder: (context) => const Troca3()),
     );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +65,7 @@ class _RELATORIO2State extends State<RELATORIO2> {
         title: const Padding(
           padding: EdgeInsets.all(8.0),
           child: Text(
-            'RELATÓRIO',
+            'TROCAS',
             style: TextStyle(
               color: Colors.white,
               fontSize: 40,
@@ -75,10 +84,14 @@ class _RELATORIO2State extends State<RELATORIO2> {
           if (_isExpanded)
             Container(
               color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(2.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  TextButton(
+                    onPressed: _navigateToTela1,
+                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
+                  ),
                   TextButton(
                     onPressed: _navigateToGastos,
                     child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
@@ -90,10 +103,6 @@ class _RELATORIO2State extends State<RELATORIO2> {
                   TextButton(
                     onPressed: _navigateToFechamento,
                     child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
@@ -114,11 +123,11 @@ class _RELATORIO2State extends State<RELATORIO2> {
                   ),
                   Row(
                     children: [
+                      const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
                           side: const BorderSide(color: Color(0xFF20805F), width: 2),
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
                           fixedSize: const Size(100, 50),
                           backgroundColor: const Color.fromARGB(255, 83, 79, 79),
                         ),
@@ -130,7 +139,7 @@ class _RELATORIO2State extends State<RELATORIO2> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Table(
+                  Table (
                     children: [
                       TableRow(
                         decoration: const BoxDecoration(
@@ -166,10 +175,28 @@ class _RELATORIO2State extends State<RELATORIO2> {
                       ),
                     ],
                   ),
-                  Container(
-                    width: 410,
-                    height: 300,
-                    color: const Color.fromARGB(255, 83, 79, 79),
+                  GestureDetector(
+                      onTap: _navigateToTroca3,
+                      child: Container(
+                        width: 410,
+                        height: 300,
+                        color: const Color.fromARGB(255, 83, 79, 79),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: List.generate(
+                            5, 
+                            (index) => const Padding(
+                              padding: EdgeInsets.only(right: 16),
+                              child: Icon(
+                                Icons.delete,
+                                size: 30,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                   ),
                   Table(
                     children: [
