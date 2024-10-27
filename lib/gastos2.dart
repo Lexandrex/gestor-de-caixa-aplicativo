@@ -3,21 +3,20 @@ import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/fechamento.dart';
 import 'package:flutter_application_1/fornecedor.dart';
 import 'package:flutter_application_1/troca.dart';
-import 'package:flutter_application_1/gastos2.dart';
 
-class Gastos extends StatefulWidget {
-  const Gastos({super.key});
+class Gastos2 extends StatefulWidget {
+  const Gastos2({super.key});
 
   @override
-  _GastosState createState() => _GastosState();
+  _Gastos2State createState() => _Gastos2State();
 }
 
-class _GastosState extends State<Gastos> {
-  bool _isExpanded = false; // Estado para controlar a expansão da AppBar
+class _Gastos2State extends State<Gastos2> {
+  bool _isExpanded = false;
 
   void _toggleExpansion() {
     setState(() {
-      _isExpanded = !_isExpanded; // Alterna o estado de expansão
+      _isExpanded = !_isExpanded;
     });
   }
 
@@ -49,38 +48,31 @@ class _GastosState extends State<Gastos> {
     );
   }
 
-  void _navigateToGastos2() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos2()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF393636), // Cor de fundo igual à Tela1
+      backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
         title: const Padding(
-          padding: EdgeInsets.all(8.0), // Adiciona padding ao título
+          padding: EdgeInsets.all(8.0),
           child: Text(
-            'GASTOS', // Título igual ao da Tela1
+            'GASTOS',
             style: TextStyle(
-              color: Color.fromARGB(255, 255, 255, 255),
+              color: Colors.white,
               fontSize: 40,
             ),
           ),
         ),
-        backgroundColor: const Color(0xFF20805F), // Cor de fundo igual à Tela1
+        backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
+          onPressed: _toggleExpansion,
         ),
       ),
       body: Column(
         children: [
-          if (_isExpanded) // Exibe as opções se estiver expandido
+          if (_isExpanded)
             Container(
               color: const Color(0xFF20805F),
               padding: const EdgeInsets.all(4.0),
@@ -107,51 +99,16 @@ class _GastosState extends State<Gastos> {
               ),
             ),
           Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(8.0)),
-                  const Text(
-                    "ANO",
-                    style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "MÊS",
-                        style: TextStyle(fontSize: 40, color: Color.fromARGB(255, 255, 255, 255)),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToGastos2,
-                        child: null,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToGastos2,
-                        child: null,
-                      ),
-                    ],
-                  ),
-                ],
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Center(
+                child: Table(
+                  children: [
+                    _buildTableRow(),
+                    _buildTableRow(),
+                    _buildTableRow(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -176,7 +133,7 @@ class _GastosState extends State<Gastos> {
                       top: 25,
                       left: 25,
                       child: Icon(
-                        Icons.add,
+                        Icons.edit,
                         size: 25,
                         color: Colors.white,
                       ),
@@ -189,6 +146,30 @@ class _GastosState extends State<Gastos> {
           const SizedBox(height: 8),
         ],
       ),
+    );
+  }
+
+  TableRow _buildTableRow() {
+    return TableRow(
+      children: [
+        Container(
+          width: 200,
+          height: 100,
+          color: const Color.fromARGB(255, 83, 79, 79),
+          margin: const EdgeInsets.only(bottom: 100),
+        ),
+        Container(
+          width: 50,
+          height: 100,
+          child: const Center(
+            child: Icon(
+              Icons.delete,
+              size: 30,
+              color: Colors.red,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

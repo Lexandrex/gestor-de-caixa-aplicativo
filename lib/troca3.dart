@@ -112,23 +112,6 @@ class _Troca3State extends State<Troca3> {
                       ),
                     ],
                   ),
-                  Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF20805F), width: 2),
-                          fixedSize: const Size(100, 50),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        child: const Text(
-                          "TODOS",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 8),
                   Table (
                     children: [
