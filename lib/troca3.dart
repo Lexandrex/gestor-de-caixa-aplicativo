@@ -37,14 +37,14 @@ class _Troca3State extends State<Troca3> {
   void _navigateToFornecedor() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
+      MaterialPageRoute(builder: (context) => const Fornecedor()),
     );
   }
 
   void _navigateToFechamento() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
+      MaterialPageRoute(builder: (context) => const Fechamento()),
     );
   }
   
@@ -155,13 +155,13 @@ class _Troca3State extends State<Troca3> {
                      alignment: Alignment.center,
                     color: const Color.fromARGB(255, 83, 79, 79),
                     child: Table(
-                      children: [
+                      children: const [
                         TableRow(
                           children: [
-                            Center(child: Text('0', style: const TextStyle(color: Colors.white, fontSize: 20))),
-                            Center(child: Text('0', style: const TextStyle(color: Colors.white, fontSize: 20))),
-                            Center(child: Text('00', style: const TextStyle(color: Colors.white, fontSize: 20))),
-                            Container(width: 200, height: 50),
+                            Center(child: Text('0', style: TextStyle(color: Colors.white, fontSize: 20))),
+                            Center(child: Text('0', style: TextStyle(color: Colors.white, fontSize: 20))),
+                            Center(child: Text('00', style: TextStyle(color: Colors.white, fontSize: 20))),
+                            SizedBox(width: 200, height: 50),
                           ],
                         ),
                       ],

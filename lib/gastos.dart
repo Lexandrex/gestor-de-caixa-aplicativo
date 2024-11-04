@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/troca.dart';
 import 'package:flutter_application_1/gastos2.dart';
 
 class Gastos extends StatefulWidget {
@@ -13,181 +9,210 @@ class Gastos extends StatefulWidget {
 }
 
 class _GastosState extends State<Gastos> {
-  bool _isExpanded = false; // Estado para controlar a expansão da AppBar
+  final List<Map<String, String>> _gastosList = [];
 
-  void _toggleExpansion() {
+  void _addGasto(String dia, String diaDaSemana, String valor) {
     setState(() {
-      _isExpanded = !_isExpanded; // Alterna o estado de expansão
+      _gastosList.add({'dia': dia, 'diaDaSemana': diaDaSemana, 'valor': valor});
     });
   }
 
-  void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
-    );
-  }
+  void _showAddGastoDialog() {
+    String dia = '';
+    String diaDaSemana = '';
+    String valor = '';
 
-  void _navigateToFornecedor() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
-    );
-  }
-
-  void _navigateToGastos2() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos2()),
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF393636),
+          title: const Text(
+            'Adicionar Gasto',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SizedBox(
+            height: 200,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Dia',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    dia = value;
+                  },
+                ),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Dia da Semana',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    diaDaSemana = value;
+                  },
+                ),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Valor',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    valor = value;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child:
+                  const Text('Cancelar', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                if (dia.isNotEmpty &&
+                    diaDaSemana.isNotEmpty &&
+                    valor.isNotEmpty) {
+                  _addGasto(dia, diaDaSemana, valor);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Adicionar',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF393636), // Cor de fundo igual à Tela1
+      backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0), // Adiciona padding ao título
+        title: Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Text(
-            'GASTOS', // Título igual ao da Tela1
+            'GASTOS',
             style: TextStyle(
-              color: Color.fromARGB(255, 255, 255, 255),
-              fontSize: 40,
+              color: Colors.white,
+              fontSize: screenWidth * 0.1,
             ),
           ),
         ),
-        backgroundColor: const Color(0xFF20805F), // Cor de fundo igual à Tela1
+        backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
-        ),
+        iconTheme: const IconThemeData(
+            color: Colors.white), // Muda a cor da seta para branco
       ),
-      body: Column(
-        children: [
-          if (_isExpanded) // Exibe as opções se estiver expandido
-            Container(
-              color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(8.0)),
-                  const Text(
-                    "ANO",
-                    style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "MÊS",
-                        style: TextStyle(fontSize: 40, color: Color.fromARGB(255, 255, 255, 255)),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToGastos2,
-                        child: null,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToGastos2,
-                        child: null,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Container(
-                margin: const EdgeInsets.only(right: 14),
-                width: 75,
-                height: 75,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 75,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF20805F),
-                      ),
-                    ),
-                    const Positioned(
-                      top: 25,
-                      left: 25,
-                      child: Icon(
-                        Icons.add,
-                        size: 25,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+              const Padding(padding: EdgeInsets.all(8.0)),
+              Text(
+                "ANO",
+                style: TextStyle(
+                  fontSize: screenWidth * 0.05,
+                  color: Colors.white,
                 ),
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    "MÊS",
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.1,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              // Exibe os gastos na lista
+              for (var gasto in _gastosList)
+                _buildReportButton(screenWidth, gasto['dia']!,
+                    gasto['diaDaSemana']!, gasto['valor']!),
             ],
           ),
-          const SizedBox(height: 8),
-        ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddGastoDialog,
+        backgroundColor: const Color(0xFF20805F),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  // Método para criar um botão de relatório
+  Widget _buildReportButton(
+      double screenWidth, String dia, String diaDaSemana, String valor) {
+    return SizedBox(
+      width: screenWidth * 0.85,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          fixedSize: Size(screenWidth * 0.85, 73),
+          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+        ),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Gastos2(),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dia,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.06,
+                  ),
+                ),
+                Text(
+                  diaDaSemana,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+            Text(
+              valor,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.07,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

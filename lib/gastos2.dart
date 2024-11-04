@@ -20,6 +20,7 @@ class _Gastos2State extends State<Gastos2> {
     });
   }
 
+  // Métodos de navegação
   void _navigateToTela1() {
     Navigator.push(
       context,
@@ -30,21 +31,21 @@ class _Gastos2State extends State<Gastos2> {
   void _navigateToFornecedor() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
+      MaterialPageRoute(builder: (context) => const Fornecedor()),
     );
   }
 
   void _navigateToFechamento() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
+      MaterialPageRoute(builder: (context) => const Fechamento()),
     );
   }
 
   void _navigateToTroca() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
+      MaterialPageRoute(builder: (context) => const Troca()),
     );
   }
 
@@ -79,28 +80,16 @@ class _Gastos2State extends State<Gastos2> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
-                  ),
+                  _buildNavButton('RELATÓRIO', _navigateToTela1),
+                  _buildNavButton('FORNECEDOR', _navigateToFornecedor),
+                  _buildNavButton('FECHAMENTO', _navigateToFechamento),
+                  _buildNavButton('TROCA', _navigateToTroca),
                 ],
               ),
             ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Center(
                 child: Table(
                   children: [
@@ -149,6 +138,15 @@ class _Gastos2State extends State<Gastos2> {
     );
   }
 
+  // Método para criar um botão de navegação
+  Widget _buildNavButton(String label, VoidCallback onPressed) {
+    return TextButton(
+      onPressed: onPressed,
+      child: Text(label, style: const TextStyle(color: Colors.white)),
+    );
+  }
+
+  // Método para criar uma linha da tabela
   TableRow _buildTableRow() {
     return TableRow(
       children: [
@@ -156,12 +154,13 @@ class _Gastos2State extends State<Gastos2> {
           width: 200,
           height: 100,
           color: const Color.fromARGB(255, 83, 79, 79),
-          margin: const EdgeInsets.only(bottom: 100),
+          margin: const EdgeInsets.only(
+              bottom: 10), // Ajuste o espaço entre as linhas
         ),
-        Container(
+        const SizedBox(
           width: 50,
           height: 100,
-          child: const Center(
+          child: Center(
             child: Icon(
               Icons.delete,
               size: 30,

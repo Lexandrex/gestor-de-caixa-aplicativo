@@ -1,139 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/gastos.dart';
-import 'package:flutter_application_1/troca.dart';
-import 'package:flutter_application_1/fornecedor2.dart';
+import 'package:flutter_application_1/fornecedor2.dart'; // Certifique-se de que o arquivo fornecedor2.dart exista
 
-class fornecedor extends StatefulWidget {
-  const fornecedor({super.key});
+class Fornecedor extends StatefulWidget {
+  const Fornecedor({super.key});
 
   @override
-  _fornecedorState createState() => _fornecedorState();
+  _FornecedorState createState() => _FornecedorState();
 }
 
-class _fornecedorState extends State<fornecedor> {
-  bool _isExpanded = false; // Estado para controlar a expansão da AppBar
-
-  // Função para alternar a expansão da AppBar
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded; // Alterna o estado de expansão
-    });
-  }
-
-  // Funções para navegação entre telas
-  void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
-    );
-  }
-
-  void _navigateToGastos() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
-    );
-  }
-
-  void _navigateToFornecedor2() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Fornecedor2()),
-    );
-  }
+class _FornecedorState extends State<Fornecedor> {
+  List<String> fornecedores =
+      []; // Lista para armazenar os nomes dos fornecedores
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: const Color(0xFF393636), // Cor de fundo
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0), // Adiciona padding ao título
+        title: Padding(
+          padding: const EdgeInsets.all(8.0), // Adiciona padding ao título
           child: Text(
-            'FORNECEDOR', // Título da AppBar
+            'FORNECEDOR',
             style: TextStyle(
-              color: Color.fromARGB(255, 255, 255, 255),
-              fontSize: 40,
+              color: const Color.fromARGB(255, 255, 255, 255),
+              fontSize: screenWidth * 0.1, // Tamanho de fonte responsivo
             ),
           ),
         ),
-        backgroundColor: const Color(0xFF20805F), // Cor de fundo da AppBar
+        backgroundColor: const Color(0xFF20805F), // Cor de fundo
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context), // Volta para a tela anterior
         ),
       ),
       body: Column(
         children: [
-          if (_isExpanded) // Exibe as opções se estiver expandido
-            Container(
-              color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToGastos,
-                    child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const SizedBox(width: 20),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF20805F), width: 2),
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  fixedSize: const Size(100, 50),
-                  backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                ),
-                child: const Text(
-                  "DIA",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
           Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(8.0)),
-                  // Row para colocar o círculo ao lado do botão
-                  Row(
+            child: ListView.builder(
+              itemCount: fornecedores.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    // Navega para a página Fornecedor2 ao clicar
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Fornecedor2(),
+                      ),
+                    );
+                  },
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Círculo
@@ -141,40 +60,149 @@ class _fornecedorState extends State<fornecedor> {
                         width: 75, // Largura do círculo
                         height: 75, // Altura do círculo
                         decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Color(0xFF20805F), width: 2
-                          ),
                           shape: BoxShape.circle,
-                          color: Color.fromARGB(255, 83, 79, 79), // Cor do círculo
+                          color: const Color.fromARGB(
+                              255, 83, 79, 79), // Cor do círculo
+                          border: Border.all(
+                            color: const Color(0xFF20805F), // Borda verde
+                          ),
                         ),
-                        child: const Icon(Icons.person),
                       ),
-                      const SizedBox(width: 20), // Espaçamento entre o círculo e o botão
+                      const SizedBox(
+                          width: 20), // Espaçamento entre o círculo e o botão
                       // Botão
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(280, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(0.0),
-                              bottomLeft: Radius.circular(0.0),
-                              topRight: Radius.circular(50.0),
-                              bottomRight: Radius.circular(50.0),
+                      SizedBox(
+                        width: screenWidth * 0.7, // Largura responsiva do botão
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            fixedSize: const Size(280, 73),
+                            backgroundColor:
+                                const Color.fromARGB(255, 83, 79, 79),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(0.0),
+                                bottomLeft: Radius.circular(0.0),
+                                topRight: Radius.circular(50.0),
+                                bottomRight: Radius.circular(50.0),
+                              ),
                             ),
                           ),
+                          onPressed: () {
+                            // Ação do botão, também pode ser deixado vazio
+                          },
+                          child: Text(
+                            fornecedores[index],
+                            style: const TextStyle(
+                                color:
+                                    Colors.white), // Exibe o nome do fornecedor
+                          ),
                         ),
-                        onPressed: _navigateToFornecedor2, // Ação do botão
-                        child: const Text(''), // Texto do botão
                       ),
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddFornecedorDialog(
+              context); // Chama a função para mostrar o formulário
+        },
+        backgroundColor: const Color(0xFF20805F),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  void _showAddFornecedorDialog(BuildContext context) {
+    String nome = '';
+    String cpf = '';
+    String descricao = '';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF393636),
+          title: const Text(
+            'Adicionar Fornecedor',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SizedBox(
+            height: 200,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    nome = value;
+                  },
+                ),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'CPF',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    cpf = value;
+                  },
+                ),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Descrição',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    descricao = value;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child:
+                  const Text('Cancelar', style: TextStyle(color: Colors.white)),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nome.isNotEmpty && cpf.isNotEmpty && descricao.isNotEmpty) {
+                  setState(() {
+                    fornecedores.add(nome); // Adiciona o fornecedor à lista
+                  });
+                  print('Fornecedor Adicionado: $nome, $cpf, $descricao');
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Adicionar',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

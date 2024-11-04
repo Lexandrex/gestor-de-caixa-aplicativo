@@ -35,51 +35,18 @@ class _Tela1State extends State<Tela1> {
     });
   }
 
-  void _navigateToGastos() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos()),
-    );
-  }
-
-  void _navigateToFornecedor() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
-    );
-  }
-
-  void _navigateToRelatorio2() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RELATORIO2()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'RELATÓRIO',
           style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
-            fontSize: 40,
+            color: const Color.fromARGB(255, 255, 255, 255),
+            fontSize: screenWidth * 0.08, // Tamanho de fonte do AppBar
           ),
         ),
         backgroundColor: const Color(0xFF20805F),
@@ -98,75 +65,123 @@ class _Tela1State extends State<Tela1> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  TextButton(
-                    onPressed: _navigateToGastos,
-                    child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
-                  ),
+                  _buildNavButton('GASTOS', const Gastos(), screenWidth),
+                  _buildNavButton('FORNECEDOR', const Fornecedor(), screenWidth),
+                  _buildNavButton('FECHAMENTO', const Fechamento(), screenWidth),
+                  _buildNavButton('TROCA', const Troca(), screenWidth),
                 ],
               ),
             ),
           Expanded(
             child: Center(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Padding(padding: EdgeInsets.all(8.0)),
-                  const Text(
+                  Text(
                     "ANO",
-                    style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
+                    style: TextStyle(
+                      fontSize:
+                          screenWidth * 0.05, // Tamanho de fonte responsivo
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                    ),
                   ),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Text(
                         "MÊS",
-                        style: TextStyle(fontSize: 40, color: Color.fromARGB(255, 255, 255, 255)),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+                        style: TextStyle(
+                          fontSize:
+                              screenWidth * 0.1, // Tamanho de fonte responsivo
+                          color: const Color.fromARGB(255, 255, 255, 255),
                         ),
-                        onPressed: _navigateToRelatorio2,
-                        child: null,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToRelatorio2,
-                        child: null,
-                      ),
-                    ],
-                  ),
+                  _buildReportButton(
+                      screenWidth, 'Dia: 2', 'segunda-feira', 'R\$ 1500,00'),
+                  const SizedBox(height: 8), // Separação entre os botões
+                  _buildReportButton(
+                      screenWidth, 'Dia: 3', 'terça-feira', 'R\$ 2000,00'),
+                  const SizedBox(height: 8), // Separação entre os botões
+                  _buildReportButton(
+                      screenWidth, 'Dia: 4', 'quarta-feira', 'R\$ 2500,00'),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Método para criar um botão de navegação
+  Widget _buildNavButton(String label, Widget destination, double screenWidth) {
+    return SizedBox(
+      // Largura do botão
+      child: TextButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => destination),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize:
+                screenWidth * 0.035, // Diminui o espaçamento entre as palavras
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Método para criar um botão de relatório
+  Widget _buildReportButton(
+      double screenWidth, String dia, String diaDaSemana, String valor) {
+    return SizedBox(
+      width: screenWidth * 0.85, // Largura responsiva do botão
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          fixedSize: Size(screenWidth * 0.85, 73), // Tamanho responsivo
+          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+        ),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const RELATORIO2(),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  dia,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.06, // Tamanho responsivo
+                  ),
+                ),
+                Text(
+                  diaDaSemana,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+            Text(
+              valor,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.07, // Aumentando o tamanho responsivo
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

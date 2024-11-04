@@ -5,7 +5,6 @@ import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/gastos.dart';
 import 'package:flutter_application_1/troca3.dart';
 
-
 class Troca2 extends StatefulWidget {
   const Troca2({super.key});
 
@@ -22,6 +21,7 @@ class _Troca2State extends State<Troca2> {
     });
   }
 
+  // Métodos de navegação
   void _navigateToTela1() {
     Navigator.push(
       context,
@@ -39,14 +39,14 @@ class _Troca2State extends State<Troca2> {
   void _navigateToFornecedor() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
+      MaterialPageRoute(builder: (context) => const Fornecedor()),
     );
   }
 
   void _navigateToFechamento() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
+      MaterialPageRoute(builder: (context) => const Fechamento()),
     );
   }
 
@@ -56,7 +56,7 @@ class _Troca2State extends State<Troca2> {
       MaterialPageRoute(builder: (context) => const Troca3()),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,22 +88,10 @@ class _Troca2State extends State<Troca2> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToGastos,
-                    child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
+                  _buildNavButton('RELATÓRIO', _navigateToTela1),
+                  _buildNavButton('GASTOS', _navigateToGastos),
+                  _buildNavButton('FORNECEDOR', _navigateToFornecedor),
+                  _buildNavButton('FECHAMENTO', _navigateToFechamento),
                 ],
               ),
             ),
@@ -127,9 +115,11 @@ class _Troca2State extends State<Troca2> {
                       ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF20805F), width: 2),
+                          side: const BorderSide(
+                              color: Color(0xFF20805F), width: 2),
                           fixedSize: const Size(100, 50),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+                          backgroundColor:
+                              const Color.fromARGB(255, 83, 79, 79),
                         ),
                         child: const Text(
                           "TODOS",
@@ -139,98 +129,103 @@ class _Troca2State extends State<Troca2> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Table (
-                    children: [
-                      TableRow(
-                        decoration: const BoxDecoration(
-                          border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
-                          color: Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("12,00", style: TextStyle(color: Colors.white)),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("20,00", style: TextStyle(color: Colors.white)),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("TOTAL", style: TextStyle(color: Colors.white)),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("HORA", style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  _buildDataTable(),
                   GestureDetector(
-                      onTap: _navigateToTroca3,
-                      child: Container(
-                        width: 410,
-                        height: 300,
-                        color: const Color.fromARGB(255, 83, 79, 79),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: List.generate(
-                            5, 
-                            (index) => const Padding(
-                              padding: EdgeInsets.only(right: 16),
-                              child: Icon(
-                                Icons.delete,
-                                size: 30,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    onTap: _navigateToTroca3,
+                    child: _buildDataContainer(),
                   ),
-                  Table(
-                    children: [
-                      TableRow(
-                        decoration: const BoxDecoration(
-                          border: Border(top: BorderSide(color: Colors.white, width: 2.0)),
-                          color: Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        children: [
-                          Container(
-                            child: null,
-                          ),
-                          Container(
-                            child: null,
-                          ),
-                          Container(
-                            child: null,
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("TOTAL", style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  _buildTotalRow(),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  // Método para construir os botões de navegação
+  Widget _buildNavButton(String label, VoidCallback onPressed) {
+    return TextButton(
+      onPressed: onPressed,
+      child: Text(label, style: const TextStyle(color: Colors.white)),
+    );
+  }
+
+  // Método para construir a tabela de dados
+  Widget _buildDataTable() {
+    return Table(
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
+            color: Color.fromARGB(255, 83, 79, 79),
+          ),
+          children: [
+            _buildTableCell("12,00"),
+            _buildTableCell("20,00"),
+            _buildTableCell("TOTAL"),
+            _buildTableCell("HORA"),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Método para construir uma célula da tabela
+  Widget _buildTableCell(String text) {
+    return Container(
+      width: 100,
+      height: 50,
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  // Método para construir o container de dados
+  Widget _buildDataContainer() {
+    return Container(
+      width: 410,
+      height: 300,
+      color: const Color.fromARGB(255, 83, 79, 79),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: List.generate(
+          5,
+          (index) => const Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Icon(
+              Icons.delete,
+              size: 30,
+              color: Colors.red,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Método para construir a linha total
+  Widget _buildTotalRow() {
+    return Table(
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: Colors.white, width: 2.0)),
+            color: Color.fromARGB(255, 83, 79, 79),
+          ),
+          children: [
+            Container(), // Célula vazia
+            Container(), // Célula vazia
+            Container(), // Célula vazia
+            _buildTableCell("TOTAL"),
+          ],
+        ),
+      ],
     );
   }
 }

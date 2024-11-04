@@ -19,6 +19,10 @@ class Fornecedor2 extends StatefulWidget {
 
 class _Fornecedor2State extends State<Fornecedor2> {
   bool _isExpanded = false;
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _cpfController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
+  String _nome = ''; // Para armazenar o nome
 
   void _toggleExpansion() {
     setState(() {
@@ -36,7 +40,7 @@ class _Fornecedor2State extends State<Fornecedor2> {
   void _navigateToFechamento() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
+      MaterialPageRoute(builder: (context) => const Fechamento()),
     );
   }
 
@@ -50,7 +54,51 @@ class _Fornecedor2State extends State<Fornecedor2> {
   void _navigateToTroca() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
+      MaterialPageRoute(builder: (context) => const Troca()),
+    );
+  }
+
+  void _showForm() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Adicionar Fornecedor'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nomeController,
+                decoration: const InputDecoration(labelText: 'Nome'),
+              ),
+              TextField(
+                controller: _cpfController,
+                decoration: const InputDecoration(labelText: 'CPF'),
+              ),
+              TextField(
+                controller: _descricaoController,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Descrição'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _nome = _nomeController.text; // Atualiza o nome
+                });
+                Navigator.of(context).pop(); // Fecha o diálogo
+              },
+              child: const Text('Salvar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -75,6 +123,12 @@ class _Fornecedor2State extends State<Fornecedor2> {
           icon: const Icon(Icons.menu, color: Colors.white),
           onPressed: _toggleExpansion,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.white),
+            onPressed: _showForm, // Chama o formulário
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -87,19 +141,23 @@ class _Fornecedor2State extends State<Fornecedor2> {
                 children: [
                   TextButton(
                     onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
+                    child: const Text('RELATÓRIO',
+                        style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
                     onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
+                    child: const Text('FECHAMENTO',
+                        style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
                     onPressed: _navigateToGastos,
-                    child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
+                    child: const Text('GASTOS',
+                        style: TextStyle(color: Colors.white)),
                   ),
                   TextButton(
                     onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
+                    child: const Text('TROCA',
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ],
               ),
@@ -132,6 +190,12 @@ class _Fornecedor2State extends State<Fornecedor2> {
                       padding: const EdgeInsets.all(10),
                       child: Column(
                         children: [
+                          // Exibe o nome inserido
+                          Text(
+                            _nome.isNotEmpty ? _nome : 'Nome não inserido',
+                            style: const TextStyle(color: corTexto, fontSize: 20),
+                          ),
+                          const SizedBox(height: 8),
                           const TextField(
                             decoration: InputDecoration(
                               labelText: 'Nome',
