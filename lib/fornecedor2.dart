@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/gastos.dart';
-import 'package:flutter_application_1/troca.dart';
 
-// Definição de constantes para cores e estilos reutilizáveis
 const Color corTexto = Color.fromARGB(255, 255, 255, 255);
 const Color corFundo = Color(0xFF393636);
 const Color corAppBar = Color(0xFF20805F);
@@ -18,255 +13,82 @@ class Fornecedor2 extends StatefulWidget {
 }
 
 class _Fornecedor2State extends State<Fornecedor2> {
-  bool _isExpanded = false;
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _cpfController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
   String _nome = ''; // Para armazenar o nome
 
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
+  @override
+  Widget build(BuildContext context) {
+    // Obtém a largura da tela
+    final double screenWidth = MediaQuery.of(context).size.width;
 
-  void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Fechamento()),
-    );
-  }
-
-  void _navigateToGastos() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Troca()),
-    );
-  }
-
-  void _showForm() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Adicionar Fornecedor'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nomeController,
-                decoration: const InputDecoration(labelText: 'Nome'),
-              ),
-              TextField(
-                controller: _cpfController,
-                decoration: const InputDecoration(labelText: 'CPF'),
-              ),
-              TextField(
-                controller: _descricaoController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Descrição'),
-              ),
-            ],
+    return Scaffold(
+      backgroundColor: corFundo, // Cor de fundo ajustada
+      appBar: AppBar(
+        title: Padding(
+          padding: const EdgeInsets.all(8.0), // Adiciona padding ao título
+          child: Text(
+            'FORNECEDOR',
+            style: TextStyle(
+              color: corTexto, // Cor do texto do título
+              fontSize: screenWidth * 0.1, // Tamanho de fonte responsivo
+            ),
           ),
-          actions: [
-            TextButton(
+        ),
+        backgroundColor: corAppBar, // Cor de fundo
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context), // Volta para a tela anterior
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              _nome.isNotEmpty ? _nome : 'Nome não inserido',
+              style: const TextStyle(
+                  color: corTexto, fontSize: 20), // Cor do texto
+            ),
+            const SizedBox(height: 20),
+            _buildTextField(_nomeController, 'Nome'),
+            const SizedBox(height: 10),
+            _buildTextField(_cpfController, 'CPF/CNPJ'),
+            const SizedBox(height: 10),
+            _buildTextField(_descricaoController, 'Descrição', maxLines: 5),
+            const SizedBox(height: 20),
+            ElevatedButton(
               onPressed: () {
                 setState(() {
                   _nome = _nomeController.text; // Atualiza o nome
                 });
-                Navigator.of(context).pop(); // Fecha o diálogo
+                // Aqui você pode adicionar lógica para salvar as alterações, se necessário
               },
-              child: const Text('Salvar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancelar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: corAppBar, // Cor de fundo do botão
+              ),
+              child: const Text('Salvar Alterações',
+                  style: TextStyle(color: corTexto)), // Cor do texto do botão
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: corFundo, // Cor de fundo ajustada
-      appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text(
-            'FORNECEDOR',
-            style: TextStyle(
-              color: corTexto,
-              fontSize: 40,
-            ),
-          ),
-        ),
-        backgroundColor: corAppBar, // Cor da AppBar ajustada
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.white),
-            onPressed: _showForm, // Chama o formulário
-          ),
-        ],
+  Widget _buildTextField(TextEditingController controller, String label,
+      {int maxLines = 1}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: corTexto), // Cor do texto do label
+        border: const OutlineInputBorder(), // Adiciona borda ao campo
       ),
-      body: Column(
-        children: [
-          if (_isExpanded)
-            Container(
-              color: corAppBar,
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToGastos,
-                    child: const Text('GASTOS',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 40),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: corIcone, width: 4),
-            ),
-            child: Table(
-              children: [
-                TableRow(
-                  children: [
-                    Container(
-                      width: 75,
-                      height: 75,
-                      margin: const EdgeInsets.only(top: 20),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: corAppBar, width: 2),
-                        shape: BoxShape.circle,
-                        color: corIcone,
-                      ),
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
-                  ],
-                ),
-                TableRow(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          // Exibe o nome inserido
-                          Text(
-                            _nome.isNotEmpty ? _nome : 'Nome não inserido',
-                            style: const TextStyle(color: corTexto, fontSize: 20),
-                          ),
-                          const SizedBox(height: 8),
-                          const TextField(
-                            decoration: InputDecoration(
-                              labelText: 'Nome',
-                              labelStyle: TextStyle(color: corTexto),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    labelText: 'CPF',
-                                    labelStyle: TextStyle(color: corTexto),
-                                  ),
-                                ),
-                              ),
-                              Checkbox(
-                                value: false,
-                                onChanged: (value) {},
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    labelText: 'CNPJ',
-                                    labelStyle: TextStyle(color: corTexto),
-                                  ),
-                                ),
-                              ),
-                              Checkbox(
-                                value: false,
-                                onChanged: (value) {},
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    labelText: 'Telefone',
-                                    labelStyle: TextStyle(color: corTexto),
-                                  ),
-                                ),
-                              ),
-                              Checkbox(
-                                value: false,
-                                onChanged: (value) {},
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          const TextField(
-                            maxLines: 5,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      style: const TextStyle(color: corTexto), // Cor do texto do campo
     );
   }
 }

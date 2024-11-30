@@ -36,75 +36,91 @@ class _FornecedorState extends State<Fornecedor> {
           onPressed: () => Navigator.pop(context), // Volta para a tela anterior
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: fornecedores.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    // Navega para a página Fornecedor2 ao clicar
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Fornecedor2(),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Círculo
-                      Container(
-                        width: 75, // Largura do círculo
-                        height: 75, // Altura do círculo
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color.fromARGB(
-                              255, 83, 79, 79), // Cor do círculo
-                          border: Border.all(
-                            color: const Color(0xFF20805F), // Borda verde
+      body: Padding(
+        padding:
+            const EdgeInsets.only(top: 16.0), // Margem entre o AppBar e a lista
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                itemCount: fornecedores.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0), // Espaçamento entre os itens da lista
+                    child: GestureDetector(
+                      onTap: () {
+                        // Navega para a página Fornecedor2 ao clicar
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Fornecedor2(),
                           ),
-                        ),
-                      ),
-                      const SizedBox(
-                          width: 20), // Espaçamento entre o círculo e o botão
-                      // Botão
-                      SizedBox(
-                        width: screenWidth * 0.7, // Largura responsiva do botão
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            fixedSize: const Size(280, 73),
-                            backgroundColor:
-                                const Color.fromARGB(255, 83, 79, 79),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(0.0),
-                                bottomLeft: Radius.circular(0.0),
-                                topRight: Radius.circular(50.0),
-                                bottomRight: Radius.circular(50.0),
+                        );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Círculo
+                          Container(
+                            width: 75, // Largura do círculo
+                            height: 75, // Altura do círculo
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: const Color.fromARGB(
+                                  255, 83, 79, 79), // Cor do círculo
+                              border: Border.all(
+                                color: const Color(0xFF20805F), // Borda verde
                               ),
                             ),
                           ),
-                          onPressed: () {
-                            // Ação do botão, também pode ser deixado vazio
-                          },
-                          child: Text(
-                            fornecedores[index],
-                            style: const TextStyle(
-                                color:
-                                    Colors.white), // Exibe o nome do fornecedor
+                          const SizedBox(
+                              width:
+                                  20), // Espaçamento entre o círculo e o botão
+                          // Botão
+                          SizedBox(
+                            width: screenWidth *
+                                0.7, // Largura responsiva do botão
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                fixedSize: const Size(280, 73),
+                                backgroundColor:
+                                    const Color.fromARGB(255, 83, 79, 79),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(0.0),
+                                    bottomLeft: Radius.circular(0.0),
+                                    topRight: Radius.circular(50.0),
+                                    bottomRight: Radius.circular(50.0),
+                                  ),
+                                ),
+                              ),
+                              onPressed: () {
+                                // Navega para a página Fornecedor2 ao clicar no botão
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const Fornecedor2(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                fornecedores[index],
+                                style: const TextStyle(
+                                    color: Colors
+                                        .white), // Exibe o nome do fornecedor
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -152,7 +168,7 @@ class _FornecedorState extends State<Fornecedor> {
                 ),
                 TextField(
                   decoration: const InputDecoration(
-                    labelText: 'CPF',
+                    labelText: 'CPF/CNPJ',
                     labelStyle: TextStyle(color: Colors.white),
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.white),
