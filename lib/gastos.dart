@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/gastos2.dart';
+import 'package:flutter_application_1/services/gastos_service.dart';
 
 class Gastos extends StatefulWidget {
   const Gastos({super.key});
@@ -10,17 +11,61 @@ class Gastos extends StatefulWidget {
 
 class _GastosState extends State<Gastos> {
   final List<Map<String, String>> _gastosList = [];
+  final GastosService _gastosService = GastosService();
+  double _totalGastos = 0.0; // Variável para armazenar o total dos gastos
 
-  void _addGasto(String dia, String diaDaSemana, String valor) {
-    setState(() {
-      _gastosList.add({'dia': dia, 'diaDaSemana': diaDaSemana, 'valor': valor});
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchTotalGastos(); // Carrega o total dos gastos ao iniciar
+  }
+
+  // Função para buscar o total dos gastos
+  void _fetchTotalGastos() async {
+    try {
+      final total = await _gastosService.getSomaGastos();
+      setState(() {
+        _totalGastos = total;
+      });
+    } catch (e) {
+      // Caso haja algum erro na requisição
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao buscar total de gastos!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _addGasto(String valor, String descricao) async {
+    try {
+      final novoGasto = await _gastosService.createGasto({
+        'quantidade': valor,
+        'descricao': descricao,
+      });
+
+      setState(() {
+        _gastosList.add({
+          'qauntidade': novoGasto['quantidade'].toString(),
+          'descricao': novoGasto['descricao'],
+        });
+      });
+
+      _fetchTotalGastos(); // Atualiza o total dos gastos após adicionar um gasto
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erro ao adicionar gasto!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showAddGastoDialog() {
-    String dia = '';
-    String diaDaSemana = '';
-    String valor = '';
+    double valor = 0.0;
+    String descricao = '';
 
     showDialog(
       context: context,
@@ -38,32 +83,6 @@ class _GastosState extends State<Gastos> {
               children: [
                 TextField(
                   decoration: const InputDecoration(
-                    labelText: 'Dia',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) {
-                    dia = value;
-                  },
-                ),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Dia da Semana',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) {
-                    diaDaSemana = value;
-                  },
-                ),
-                TextField(
-                  decoration: const InputDecoration(
                     labelText: 'Valor',
                     labelStyle: TextStyle(color: Colors.white),
                     enabledBorder: UnderlineInputBorder(
@@ -71,8 +90,23 @@ class _GastosState extends State<Gastos> {
                     ),
                   ),
                   style: const TextStyle(color: Colors.white),
+                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                   onChanged: (value) {
-                    valor = value;
+                    valor = double.tryParse(value) ?? 0.0;
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Descrição',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    descricao = value;
                   },
                 ),
               ],
@@ -83,20 +117,16 @@ class _GastosState extends State<Gastos> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child:
-                  const Text('Cancelar', style: TextStyle(color: Colors.white)),
+              child: const Text('Cancelar', style: TextStyle(color: Colors.white)),
             ),
             TextButton(
               onPressed: () {
-                if (dia.isNotEmpty &&
-                    diaDaSemana.isNotEmpty &&
-                    valor.isNotEmpty) {
-                  _addGasto(dia, diaDaSemana, valor);
+                if (valor > 0 && descricao.isNotEmpty) {
+                  _addGasto(valor.toString(), descricao);
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Adicionar',
-                  style: TextStyle(color: Colors.white)),
+              child: const Text('Adicionar', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -123,8 +153,7 @@ class _GastosState extends State<Gastos> {
         ),
         backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
-        iconTheme: const IconThemeData(
-            color: Colors.white), // Muda a cor da seta para branco
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -151,10 +180,15 @@ class _GastosState extends State<Gastos> {
                   ),
                 ],
               ),
-              // Exibe os gastos na lista
-              for (var gasto in _gastosList)
-                _buildReportButton(screenWidth, gasto['dia']!,
-                    gasto['diaDaSemana']!, gasto['valor']!),
+              // Adiciona o botão com a soma dos gastos
+              _buildTotalGastosButton(screenWidth),
+// Exibe os gastos adicionados
+for (var gasto in _gastosList)  // Iterando corretamente sobre a lista
+  Padding(
+    padding: const EdgeInsets.only(bottom: 10.0),
+    child: _buildReportButton(screenWidth, gasto), // Passando o 'gasto' para o botão
+  ),
+
             ],
           ),
         ),
@@ -168,9 +202,8 @@ class _GastosState extends State<Gastos> {
     );
   }
 
-  // Método para criar um botão de relatório
-  Widget _buildReportButton(
-      double screenWidth, String dia, String diaDaSemana, String valor) {
+  // Função para criar o botão que mostra a soma dos gastos
+  Widget _buildTotalGastosButton(double screenWidth,) {
     return SizedBox(
       width: screenWidth * 0.85,
       child: ElevatedButton(
@@ -178,36 +211,57 @@ class _GastosState extends State<Gastos> {
           fixedSize: Size(screenWidth * 0.85, 73),
           backgroundColor: const Color.fromARGB(255, 83, 79, 79),
         ),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const Gastos2(),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dia,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: screenWidth * 0.06,
-                  ),
-                ),
-                Text(
-                  diaDaSemana,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
+        onPressed: () {
+          // Navega para a tela Gastos2
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Gastos2(),
             ),
+          );
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Spacer(),
             Text(
-              valor,
+              '-${_totalGastos.toStringAsFixed(2)}',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.red,
+                fontSize: screenWidth * 0.07,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Função para o botão de relatório de gastos individuais (já existente)
+  Widget _buildReportButton(double screenWidth, Map<String, String> gasto) {
+    return SizedBox(
+      width: screenWidth * 0.85,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          fixedSize: Size(screenWidth * 0.85, 73),
+          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Gastos2(),
+            ),
+          );
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const Spacer(),
+            Text(
+              '-${_totalGastos.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: Colors.red,
                 fontSize: screenWidth * 0.07,
               ),
             ),

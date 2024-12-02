@@ -3,6 +3,8 @@ import cors from "cors";
 import db from "./config/database.js"; // Assumindo que a configuração do Sequelize está aqui
 
 import vendasRota from "./routes/vendas_routes.js"; // Rota para as vendas
+import gastosRota from "./routes/gastos_routes.js";
+import fornecedorRota from "./routes/fornecedor_routes.js"
 
 const server = express();
 server.use(express.json());
@@ -26,7 +28,6 @@ const startServer = async () => {
 };
 
 // Adicionar as rotas após a autenticação do banco de dados
-server.use(vendasRota);
-
+server.use(vendasRota, gastosRota, fornecedorRota);
 // Iniciar o servidor e a conexão com o banco
 startServer();

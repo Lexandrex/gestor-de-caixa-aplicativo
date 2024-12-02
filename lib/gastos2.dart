@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/troca.dart';
+import 'package:flutter_application_1/services/gastos_service.dart'; // Importe o serviço
 
 class Gastos2 extends StatefulWidget {
   const Gastos2({super.key});
@@ -12,41 +9,36 @@ class Gastos2 extends StatefulWidget {
 }
 
 class _Gastos2State extends State<Gastos2> {
-  bool _isExpanded = false;
+  List<dynamic> gastos = []; // Lista de gastos
+  final GastosService apiService = GastosService(); // Instância do serviço
+  bool isLoading = true; // Estado de carregamento
+  String? selectedDate; // Data selecionada
 
-  void _toggleExpansion() {
+  @override
+  void initState() {
+    super.initState();
+    _loadGastos(); // Carrega os gastos ao inicializar o widget
+  }
+
+  Future<void> _loadGastos({String? date}) async {
     setState(() {
-      _isExpanded = !_isExpanded;
+      isLoading = true; // Exibe o indicador de carregamento
     });
-  }
 
-  // Métodos de navegação
-  void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
-    );
-  }
-
-  void _navigateToFornecedor() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Fornecedor()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Fechamento()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Troca()),
-    );
+    try {
+      final fetchedGastos = await apiService.getGastos(date: date);
+      setState(() {
+        gastos = fetchedGastos;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar gastos: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false; // Oculta o indicador de carregamento
+      });
+    }
   }
 
   @override
@@ -54,121 +46,114 @@ class _Gastos2State extends State<Gastos2> {
     return Scaffold(
       backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text(
-            'GASTOS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 40,
-            ),
-          ),
+        title: const Text(
+          'GASTOS',
+          style: TextStyle(color: Colors.white, fontSize: 40),
         ),
         backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion,
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
       ),
       body: Column(
         children: [
-          if (_isExpanded)
-            Container(
-              color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavButton('RELATÓRIO', _navigateToTela1),
-                  _buildNavButton('FORNECEDOR', _navigateToFornecedor),
-                  _buildNavButton('FECHAMENTO', _navigateToFechamento),
-                  _buildNavButton('TROCA', _navigateToTroca),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Center(
-                child: Table(
-                  children: [
-                    _buildTableRow(),
-                    _buildTableRow(),
-                    _buildTableRow(),
-                  ],
-                ),
-              ),
-            ),
+          const Padding(padding: EdgeInsets.all(8.0)),
+          const Text(
+            "DIA",
+            style: TextStyle(fontSize: 40, color: Colors.white),
+            textAlign: TextAlign.center,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(right: 14),
-                width: 75,
-                height: 75,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 75,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF20805F),
-                      ),
-                    ),
-                    const Positioned(
-                      top: 25,
-                      left: 25,
-                      child: Icon(
-                        Icons.edit,
-                        size: 25,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          TextButton(
+            onPressed: () async {
+              final selected = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2101),
+              );
+              if (selected != null && selected != DateTime.now()) {
+                setState(() {
+                  selectedDate = "${selected.year}-${selected.month}-${selected.day}";
+                });
+              }
+            },
+            child: Text(selectedDate ?? 'Selecionar Data',
+                style: const TextStyle(color: Colors.white)),
+          ),
+          ElevatedButton(
+            onPressed: () => _loadGastos(date: selectedDate),
+            style: ElevatedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF20805F), width: 2),
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              fixedSize: const Size(100, 50),
+              backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+            ),
+            child: const Text("FILTRAR", style: TextStyle(color: Colors.white)),
           ),
           const SizedBox(height: 8),
+          isLoading
+              ? const Center(child: CircularProgressIndicator()) // Indicador de carregamento
+              : gastos.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Nenhum gasto encontrado',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )
+                  : Expanded(child: _buildDataTable()), // Tabela de gastos
         ],
       ),
     );
   }
 
-  // Método para criar um botão de navegação
-  Widget _buildNavButton(String label, VoidCallback onPressed) {
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(label, style: const TextStyle(color: Colors.white)),
+  Widget _buildDataTable() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Table(
+        border: TableBorder.all(
+          color: Colors.white,
+          width: 1,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        children: [
+          // Cabeçalho da Tabela
+          TableRow(
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 83, 79, 79),
+            ),
+            children: [
+              _buildTableCell("VALOR"),
+              _buildTableCell("DESCRIÇÃO"),
+            ],
+          ),
+          // Preencher a tabela com os dados
+          for (var gasto in gastos)
+            TableRow(
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 83, 79, 79),
+              ),
+              children: [
+                _buildTableCell(gasto['valor'] ?? 'N/A'), // Valor
+                _buildTableCell(gasto['descricao'] ?? 'N/A'), // Descrição
+              ],
+            ),
+        ],
+      ),
     );
   }
 
-  // Método para criar uma linha da tabela
-  TableRow _buildTableRow() {
-    return TableRow(
-      children: [
-        Container(
-          width: 200,
-          height: 100,
-          color: const Color.fromARGB(255, 83, 79, 79),
-          margin: const EdgeInsets.only(
-              bottom: 10), // Ajuste o espaço entre as linhas
-        ),
-        const SizedBox(
-          width: 50,
-          height: 100,
-          child: Center(
-            child: Icon(
-              Icons.delete,
-              size: 30,
-              color: Colors.red,
-            ),
-          ),
-        ),
-      ],
+  static Widget _buildTableCell(String text) {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      alignment: Alignment.center,
+      child: Text(
+        text,
+        style: const TextStyle(color: Colors.white),
+      ),
     );
   }
 }
