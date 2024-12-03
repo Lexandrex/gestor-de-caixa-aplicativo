@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/vendas_service.dart'; 
 import 'package:flutter_application_1/fechamento.dart';
 import 'package:flutter_application_1/gastos.dart';
 import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/relatorio2.dart';
 import 'package:flutter_application_1/troca.dart';
 
 void main() => runApp(const Atividade());
@@ -33,6 +33,17 @@ class _Tela1State extends State<Tela1> {
     setState(() {
       _isExpanded = !_isExpanded; // Alterna o estado de expansão
     });
+  }
+
+  // Função para obter todas as vendas do banco de dados
+  Future<List<dynamic>> getVendas() async {
+    ApiService apiService = ApiService();
+    try {
+      return await apiService.getVendas(); // Chama o serviço de API para buscar todas as vendas
+    } catch (e) {
+      // Em caso de erro, você pode retornar uma lista vazia ou tratar de outra maneira
+      return [];
+    }
   }
 
   @override
@@ -66,49 +77,37 @@ class _Tela1State extends State<Tela1> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildNavButton('GASTOS', const Gastos(), screenWidth),
-                  _buildNavButton('FORNECEDOR', const Fornecedor(), screenWidth),
+                  _buildNavButton('FORNECEDOR', const FornecedorScreen(), screenWidth),
                   _buildNavButton('FECHAMENTO', const Fechamento(), screenWidth),
                   _buildNavButton('TROCA', const Troca(), screenWidth),
                 ],
               ),
             ),
           Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  const Padding(padding: EdgeInsets.all(8.0)),
-                  Text(
-                    "ANO",
-                    style: TextStyle(
-                      fontSize:
-                          screenWidth * 0.05, // Tamanho de fonte responsivo
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "MÊS",
-                        style: TextStyle(
-                          fontSize:
-                              screenWidth * 0.1, // Tamanho de fonte responsivo
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                        ),
-                      ),
-                    ],
-                  ),
-                  _buildReportButton(
-                      screenWidth, 'Dia: 2', 'segunda-feira', 'R\$ 1500,00'),
-                  const SizedBox(height: 8), // Separação entre os botões
-                  _buildReportButton(
-                      screenWidth, 'Dia: 3', 'terça-feira', 'R\$ 2000,00'),
-                  const SizedBox(height: 8), // Separação entre os botões
-                  _buildReportButton(
-                      screenWidth, 'Dia: 4', 'quarta-feira', 'R\$ 2500,00'),
-                ],
-              ),
+            child: FutureBuilder<List<dynamic>>(
+              future: getVendas(), // Chama a função que retorna todas as vendas
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Erro: ${snapshot.error}'));
+                } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                  // Se houver dados
+                  List<dynamic> vendas = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: vendas.length,
+                    itemBuilder: (context, index) {
+                      var venda = vendas[index];
+                      return _buildVendaItem(
+                        screenWidth,
+                        venda, // Passando a venda completa
+                      );
+                    },
+                  );
+                } else {
+                  return const Center(child: Text('Nenhuma venda encontrada'));
+                }
+              },
             ),
           ),
         ],
@@ -119,7 +118,6 @@ class _Tela1State extends State<Tela1> {
   // Método para criar um botão de navegação
   Widget _buildNavButton(String label, Widget destination, double screenWidth) {
     return SizedBox(
-      // Largura do botão
       child: TextButton(
         onPressed: () => Navigator.push(
           context,
@@ -129,30 +127,25 @@ class _Tela1State extends State<Tela1> {
           label,
           style: TextStyle(
             color: Colors.white,
-            fontSize:
-                screenWidth * 0.035, // Diminui o espaçamento entre as palavras
+            fontSize: screenWidth * 0.035,
           ),
         ),
       ),
     );
   }
 
-  // Método para criar um botão de relatório
-  Widget _buildReportButton(
-      double screenWidth, String dia, String diaDaSemana, String valor) {
+  // Método para exibir um item de venda com informações fixas
+  Widget _buildVendaItem(double screenWidth, dynamic venda) {
     return SizedBox(
-      width: screenWidth * 0.85, // Largura responsiva do botão
+      width: screenWidth * 0.85,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          fixedSize: Size(screenWidth * 0.85, 73), // Tamanho responsivo
+          fixedSize: Size(screenWidth * 0.85, 73), 
           backgroundColor: const Color.fromARGB(255, 83, 79, 79),
         ),
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const RELATORIO2(),
-          ),
-        ),
+        onPressed: () {
+          // Lógica do botão ao ser pressionado
+        },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -161,24 +154,35 @@ class _Tela1State extends State<Tela1> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  dia,
+                  'Hora: ${venda['hora'] ?? 'Não Informado'}',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: screenWidth * 0.06, // Tamanho responsivo
                   ),
                 ),
                 Text(
-                  diaDaSemana,
+                  'Forma de Pagamento: ${venda['formaPagamento'] ?? 'Não Informado'}',
                   style: const TextStyle(color: Colors.white),
                 ),
               ],
             ),
-            Text(
-              valor,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: screenWidth * 0.07, // Aumentando o tamanho responsivo
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Qtd 12: ${venda['quantidade_12'] ?? 0}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Qtd 20: ${venda['quantidade_20'] ?? 0}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Total: R\$ ${venda['total'] ?? '0.00'}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
             ),
           ],
         ),

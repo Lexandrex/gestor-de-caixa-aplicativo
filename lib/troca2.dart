@@ -39,7 +39,7 @@ class _Troca2State extends State<Troca2> {
   void _navigateToFornecedor() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const Fornecedor()),
+      MaterialPageRoute(builder: (context) => const FornecedorScreen()),
     );
   }
 

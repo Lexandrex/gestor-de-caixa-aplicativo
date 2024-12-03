@@ -37,7 +37,7 @@ class _Troca3State extends State<Troca3> {
   void _navigateToFornecedor() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const Fornecedor()),
+      MaterialPageRoute(builder: (context) => const FornecedorScreen()),
     );
   }
 

@@ -2,15 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/fornecedor_service.dart';
 import 'fornecedor2.dart';
 
-class Fornecedor extends StatefulWidget {
-  const Fornecedor({super.key});
+// Definindo o modelo Fornecedor dentro do mesmo arquivo
+class Fornecedor {
+  final String nome;
+  final String cnpj;
+  final String telefone;
+  final String descricao;
 
-  @override
-  _FornecedorState createState() => _FornecedorState();
+  // Construtor
+  Fornecedor({
+    required this.nome,
+    required this.cnpj,
+    required this.telefone,
+    required this.descricao,
+  });
+
+  // Método para converter para JSON (opcional, caso precise)
+
+  Map<String, dynamic> toJson() {
+    return {
+      'cnpj': cnpj,
+      'nome': nome,
+      'telefone': telefone,
+      'descricao': descricao,
+    };
+  }
 }
 
-class _FornecedorState extends State<Fornecedor> {
-  List<String> fornecedores = []; // Lista para armazenar os nomes dos fornecedores
+class FornecedorScreen extends StatefulWidget {
+  const FornecedorScreen({super.key});
+
+  @override
+  _FornecedorScreenState createState() => _FornecedorScreenState();
+}
+
+class _FornecedorScreenState extends State<FornecedorScreen> {
+  List<Fornecedor> fornecedores = []; // Lista para armazenar objetos Fornecedor
   bool isLoading = true; // Flag para controlar o carregamento
 
   @override
@@ -26,7 +53,14 @@ class _FornecedorState extends State<Fornecedor> {
       List<dynamic> fetchedFornecedores = await fornecedorService.getFornecedores();
 
       setState(() {
-        fornecedores = fetchedFornecedores.map((f) => f['nome'] as String).toList();
+        fornecedores = fetchedFornecedores.map((f) {
+          return Fornecedor(
+            nome: f['nome'],
+            cnpj: f['cnpj'],
+            telefone: f['telefone'],
+            descricao: f['descricao'],
+          );
+        }).toList(); // Converter para objetos Fornecedor
         isLoading = false;
       });
     } catch (e) {
@@ -95,7 +129,7 @@ class _FornecedorState extends State<Fornecedor> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const Fornecedor2(),
+                                  builder: (context) => Fornecedor2(fornecedor: fornecedores[index]), // Passando o objeto fornecedor
                                 ),
                               );
                             },
@@ -129,12 +163,12 @@ class _FornecedorState extends State<Fornecedor> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => const Fornecedor2(),
+                                          builder: (context) => Fornecedor2(fornecedor: fornecedores[index]), // Passando o objeto fornecedor
                                         ),
                                       );
                                     },
                                     child: Text(
-                                      fornecedores[index],
+                                      fornecedores[index].nome, // Exibindo o nome do fornecedor
                                       style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
@@ -230,13 +264,24 @@ class _FornecedorState extends State<Fornecedor> {
               onPressed: () async {
                 if (nome.isNotEmpty && cnpj.isNotEmpty && telefone.isNotEmpty && descricao.isNotEmpty) {
                   try {
+                    // Cria uma instância de Fornecedor
+                    Fornecedor novoFornecedor = Fornecedor(
+                      nome: nome,
+                      cnpj: cnpj,
+                      telefone: telefone,
+                      descricao: descricao,
+                    );
+
+                    // Adiciona o fornecedor à lista
+                    setState(() {
+                      fornecedores.add(novoFornecedor);
+                    });
+
+                    // Chama o serviço para adicionar o fornecedor no backend
                     FornecedorService fornecedorService = FornecedorService();
                     await fornecedorService.createFornecedor(nome, cnpj, telefone, descricao);
 
-                    setState(() {
-                      fornecedores.add(nome);
-                    });
-
+                    // Fecha o diálogo após a inserção
                     Navigator.of(context).pop();
                   } catch (e) {
                     showDialog(

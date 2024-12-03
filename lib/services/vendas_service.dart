@@ -26,10 +26,12 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body); // Retorna a lista de vendas
       } else {
-        throw Exception('Erro ao carregar vendas');
+        // Exibe o código de erro retornado pela API
+        throw Exception('Erro ao carregar vendas: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro: $e');
+      // Mais detalhes no erro para facilitar o diagnóstico
+      throw Exception('Erro ao carregar vendas: $e');
     }
   }
 
@@ -45,10 +47,12 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body); // Retorna a venda atualizada
       } else {
-        throw Exception('Erro ao atualizar a venda');
+        // Exibe o código de erro retornado pela API
+        throw Exception('Erro ao atualizar a venda: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro: $e');
+      // Mais detalhes no erro para facilitar o diagnóstico
+      throw Exception('Erro ao atualizar a venda: $e');
     }
   }
 
@@ -62,10 +66,12 @@ class ApiService {
       if (response.statusCode == 200) {
         return json.decode(response.body); // Retorna a resposta da deleção
       } else {
-        throw Exception('Erro ao deletar a venda');
+        // Exibe o código de erro retornado pela API
+        throw Exception('Erro ao deletar a venda: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Erro: $e');
+      // Mais detalhes no erro para facilitar o diagnóstico
+      throw Exception('Erro ao deletar a venda: $e');
     }
   }
 }
