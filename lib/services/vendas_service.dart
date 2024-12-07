@@ -1,36 +1,27 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ApiService {
-  final String baseUrl = 'http://10.0.2.2:3001'; // Substitua pela URL do seu backend
+  final SupabaseClient supabase = Supabase.instance.client;
 
-  // Função para obter vendas
+  // Função para obter vendas (com filtros opcionais)
   Future<List<dynamic>> getVendas({String? formaPagamento, String? date}) async {
     try {
-      // Criação de um mapa para os parâmetros de consulta
-      Map<String, String> queryParameters = {};
+      // Inicia a query
+      var query = supabase.from('vendas').select();
 
+      // Aplica filtros, se existirem
       if (formaPagamento != null) {
-        queryParameters['formaPagamento'] = formaPagamento;
+        query = query.eq('formaPagamento', formaPagamento);
       }
 
       if (date != null) {
-        queryParameters['date'] = date;
+        query = query.eq('date', date);
       }
 
-      // Construção da URL com parâmetros de consulta
-      final uri = Uri.parse('$baseUrl/vendas').replace(queryParameters: queryParameters);
-
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body); // Retorna a lista de vendas
-      } else {
-        // Exibe o código de erro retornado pela API
-        throw Exception('Erro ao carregar vendas: ${response.statusCode}');
-      }
+      // Executa a query e retorna os resultados
+      final response = await query;
+      return response as List<dynamic>;
     } catch (e) {
-      // Mais detalhes no erro para facilitar o diagnóstico
       throw Exception('Erro ao carregar vendas: $e');
     }
   }
@@ -38,39 +29,62 @@ class ApiService {
   // Função para atualizar uma venda
   Future<Map<String, dynamic>> updateVendas(int idVenda, Map<String, dynamic> vendaData) async {
     try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/vendas/$idVenda'),
-        body: json.encode(vendaData),
-        headers: {'Content-Type': 'application/json'},
-      );
+      final response = await supabase
+          .from('vendas')
+          .update(vendaData)
+          .eq('id', idVenda)
+          .select()
+          .single();
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body); // Retorna a venda atualizada
-      } else {
-        // Exibe o código de erro retornado pela API
-        throw Exception('Erro ao atualizar a venda: ${response.statusCode}');
-      }
+      return response as Map<String, dynamic>;
     } catch (e) {
-      // Mais detalhes no erro para facilitar o diagnóstico
       throw Exception('Erro ao atualizar a venda: $e');
     }
   }
 
-  // Função para deletar uma venda
-  Future<Map<String, dynamic>> deleteVendas(int idVenda) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/vendas/$idVenda'),
-      );
+  // Função para atualizar os campos específicos de uma venda
+  Future<Map<String, dynamic>> updateVendaCampos(int idVenda, {int? quantidade12, int? quantidade20, String? formaPagamento}) async {
+  try {
+    // Prepara o mapa de dados que precisa ser atualizado
+    final Map<String, dynamic> vendaData = {};
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body); // Retorna a resposta da deleção
-      } else {
-        // Exibe o código de erro retornado pela API
-        throw Exception('Erro ao deletar a venda: ${response.statusCode}');
-      }
+    // Verifica se o campo é nulo e define um valor default (por exemplo, 0)
+    if (quantidade12 != null) {
+      vendaData['quantidade_12'] = quantidade12;
+    } else {
+      vendaData['quantidade_12'] = 0; // Valor default caso seja nulo
+    }
+
+    if (quantidade20 != null) {
+      vendaData['quantidade_20'] = quantidade20;
+    } else {
+      vendaData['quantidade_20'] = 0; // Valor default caso seja nulo
+    }
+
+    if (formaPagamento != null) {
+      vendaData['formaPagamento'] = formaPagamento;
+    }
+
+    // Atualiza a venda no banco de dados
+    final response = await supabase
+        .from('vendas')
+        .update(vendaData)
+        .eq('id', idVenda)
+        .select()
+        .single();
+
+    return response as Map<String, dynamic>;
+  } catch (e) {
+    throw Exception('Erro ao atualizar os campos da venda: $e');
+  }
+}
+
+
+  // Função para deletar uma venda
+  Future<void> deleteVendas(int idVenda) async {
+    try {
+      await supabase.from('vendas').delete().eq('id', idVenda);
     } catch (e) {
-      // Mais detalhes no erro para facilitar o diagnóstico
       throw Exception('Erro ao deletar a venda: $e');
     }
   }

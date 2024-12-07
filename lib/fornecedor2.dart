@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/fornecedor_service.dart'; // Certifique-se de que o caminho está correto
 import 'fornecedor.dart'; // Importar o modelo Fornecedor
+import 'services/fornecedor_service.dart'; // Certifique-se de que o caminho está correto
 
 const Color corTexto = Color.fromARGB(255, 255, 255, 255);
 const Color corFundo = Color(0xFF393636);
@@ -18,9 +18,9 @@ class Fornecedor2 extends StatefulWidget {
 class _Fornecedor2State extends State<Fornecedor2> {
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _cnpjController = TextEditingController();
-  final TextEditingController _telefoneController = TextEditingController(); // Novo controlador para telefone
+  final TextEditingController _telefoneController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
-  
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +64,7 @@ class _Fornecedor2State extends State<Fornecedor2> {
             const SizedBox(height: 10),
             _buildTextField(_cnpjController, 'CNPJ'),
             const SizedBox(height: 10),
-            _buildTextField(_telefoneController, 'Telefone'), // Campo para telefone
+            _buildTextField(_telefoneController, 'Telefone'),
             const SizedBox(height: 10),
             _buildTextField(_descricaoController, 'Descrição', maxLines: 5),
             const SizedBox(height: 20),
@@ -73,20 +73,19 @@ class _Fornecedor2State extends State<Fornecedor2> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    // Lógica para salvar as alterações
+                    // Atualizar fornecedor no Supabase
                     FornecedorService fornecedorService = FornecedorService();
                     try {
                       await fornecedorService.updateFornecedor(
-                        widget.fornecedor.cnpj, // Usando o CNPJ como identificador
+                        widget.fornecedor.cnpj, // Usando CNPJ original
                         _nomeController.text,
                         _cnpjController.text,
-                        _telefoneController.text, // Adicionando telefone
+                        _telefoneController.text,
                         _descricaoController.text,
                       );
-                      Navigator.pop(context, true); // Retorna true para indicar que houve alteração
+                      Navigator.pop(context, true); // Indica sucesso ao voltar
                     } catch (e) {
-                      // Tratar erro
-                      _showErrorDialog(e.toString());
+                      _showErrorDialog('Erro ao salvar: $e');
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -96,18 +95,17 @@ class _Fornecedor2State extends State<Fornecedor2> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    // Lógica para excluir o fornecedor
+                    // Excluir fornecedor no Supabase
                     FornecedorService fornecedorService = FornecedorService();
                     try {
-                      await fornecedorService.deleteFornecedor(widget.fornecedor.cnpj); // Usando CNPJ para deletar
-                      Navigator.pop(context, true); // Retorna true para indicar que o fornecedor foi excluído
+                      await fornecedorService.deleteFornecedor(widget.fornecedor.cnpj);
+                      Navigator.pop(context, true); // Indica sucesso ao voltar
                     } catch (e) {
-                      // Tratar erro
-                      _showErrorDialog(e.toString());
+                      _showErrorDialog('Erro ao excluir: $e');
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red, // Cor para o botão de exclusão
+                    backgroundColor: Colors.red,
                   ),
                   child: const Text('Excluir Fornecedor', style: TextStyle(color: corTexto)),
                 ),
@@ -125,10 +123,10 @@ class _Fornecedor2State extends State<Fornecedor2> {
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: corTexto), // Cor do texto do label
-        border: const OutlineInputBorder(), // Adiciona borda ao campo
+        labelStyle: const TextStyle(color: corTexto),
+        border: const OutlineInputBorder(),
       ),
-      style: const TextStyle(color: corTexto), // Cor do texto do campo
+      style: const TextStyle(color: corTexto),
     );
   }
 

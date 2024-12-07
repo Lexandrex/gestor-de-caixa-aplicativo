@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/fornecedor_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'fornecedor2.dart';
 
-// Definindo o modelo Fornecedor dentro do mesmo arquivo
 class Fornecedor {
   final String nome;
   final String cnpj;
   final String telefone;
   final String descricao;
 
-  // Construtor
   Fornecedor({
     required this.nome,
     required this.cnpj,
@@ -17,12 +15,21 @@ class Fornecedor {
     required this.descricao,
   });
 
-  // Método para converter para JSON (opcional, caso precise)
+  // Converte um Map (do Supabase) para um objeto Fornecedor
+  factory Fornecedor.fromMap(Map<String, dynamic> map) {
+    return Fornecedor(
+      nome: map['nome'] ?? '',
+      cnpj: map['cnpj'] ?? '',
+      telefone: map['telefone'] ?? '',
+      descricao: map['descricao'] ?? '',
+    );
+  }
 
+  // Converte o objeto para JSON (necessário para salvar no Supabase)
   Map<String, dynamic> toJson() {
     return {
-      'cnpj': cnpj,
       'nome': nome,
+      'cnpj': cnpj,
       'telefone': telefone,
       'descricao': descricao,
     };
@@ -37,161 +44,198 @@ class FornecedorScreen extends StatefulWidget {
 }
 
 class _FornecedorScreenState extends State<FornecedorScreen> {
-  List<Fornecedor> fornecedores = []; // Lista para armazenar objetos Fornecedor
-  bool isLoading = true; // Flag para controlar o carregamento
+  List<Fornecedor> fornecedores = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchFornecedores(); // Busca os fornecedores ao iniciar o estado
+    _fetchFornecedores();
   }
 
-  // Função para buscar fornecedores
-  Future<void> _fetchFornecedores() async {
-    try {
-      FornecedorService fornecedorService = FornecedorService();
-      List<dynamic> fetchedFornecedores = await fornecedorService.getFornecedores();
+  // Busca os fornecedores do Supabase
+  // Função para buscar fornecedores do Supabase
+Future<void> _fetchFornecedores() async {
+  try {
+    // Recupera os fornecedores diretamente
+    final List<dynamic> response = await Supabase.instance.client
+        .from('fornecedor') // Nome da tabela no Supabase
+        .select();
 
+    // Se não houver erro, processa os dados
+    setState(() {
+      fornecedores = response.map((f) {
+        return Fornecedor(
+          nome: f['nome'] ?? '',
+          cnpj: f['cnpj'] ?? '',
+          telefone: f['telefone'] ?? '',
+          descricao: f['descricao'] ?? '',
+        );
+      }).toList();
+      isLoading = false;
+    });
+  } catch (e) {
+    // Em caso de erro, exibe uma mensagem e atualiza o estado
+    setState(() {
+      isLoading = false;
+    });
+
+    _showErrorDialog('Erro ao carregar fornecedores: $e');
+  }
+}
+
+
+
+  // Adiciona um novo fornecedor ao Supabase
+  Future<void> _addFornecedor(Fornecedor fornecedor) async {
+    try {
+      final response = await Supabase.instance.client
+          .from('fornecedor') // Nome da tabela no Supabase
+          .insert(fornecedor.toJson());
+
+      if (response.error != null) {
+        throw Exception(response.error!.message);
+      }
+
+      // Atualiza a lista de fornecedores localmente
       setState(() {
-        fornecedores = fetchedFornecedores.map((f) {
-          return Fornecedor(
-            nome: f['nome'],
-            cnpj: f['cnpj'],
-            telefone: f['telefone'],
-            descricao: f['descricao'],
-          );
-        }).toList(); // Converter para objetos Fornecedor
-        isLoading = false;
+        fornecedores.add(fornecedor);
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Erro'),
-          content: Text('Erro ao carregar fornecedores: $e'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      _showErrorDialog('Erro ao adicionar fornecedor: $e');
     }
+  }
+
+  // Mostra um diálogo de erro
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erro'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+  final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF393636), // Cor de fundo
-      appBar: AppBar(
-        title: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            'FORNECEDOR',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: screenWidth * 0.1,
-            ),
+  return Scaffold(
+    backgroundColor: const Color(0xFF393636),
+    appBar: AppBar(
+      title: Text(
+        'FORNECEDOR',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: screenWidth * 0.07,
+        ),
+      ),
+      backgroundColor: const Color(0xFF20805F),
+      centerTitle: true,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
+      ),
+    ),
+    body: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : fornecedores.isEmpty
+            ? const Center(
+                child: Text(
+                  'Nenhum fornecedor encontrado',
+                  style: TextStyle(color: Colors.white),
+                ),
+              )
+            : GridView.builder(
+                padding: const EdgeInsets.all(16.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Dois botões por linha
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.2, // Ajusta a proporção do botão
+                ),
+                itemCount: fornecedores.length,
+                itemBuilder: (context, index) {
+                  final fornecedor = fornecedores[index];
+                  return _buildFornecedorButton(fornecedor, screenWidth);
+                },
+              ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () => _showAddFornecedorDialog(context),
+      backgroundColor: const Color(0xFF20805F),
+      child: const Icon(Icons.add, color: Colors.white),
+    ),
+  );
+}
+
+Widget _buildFornecedorButton(Fornecedor fornecedor, double screenWidth) {
+  // Trunca o nome se exceder 20 caracteres
+  String nomeTruncado = fornecedor.nome.length > 20
+      ? '${fornecedor.nome.substring(0, 20)}...'
+      : fornecedor.nome;
+
+  return ElevatedButton(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(16),
+    ),
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Fornecedor2(fornecedor: fornecedor),
+        ),
+      );
+    },
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Nome truncado com limite de 20 caracteres
+        Text(
+          nomeTruncado,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: screenWidth * 0.05,
+            fontWeight: FontWeight.bold,
           ),
+          textAlign: TextAlign.center,
         ),
-        backgroundColor: const Color(0xFF20805F),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+        const SizedBox(height: 8),
+        // Exibição do CNPJ
+        Text(
+          'CNPJ: ${fornecedor.cnpj}',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: screenWidth * 0.04,
+          ),
+          textAlign: TextAlign.center,
         ),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: fornecedores.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'Nenhum fornecedor encontrado',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: fornecedores.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Fornecedor2(fornecedor: fornecedores[index]), // Passando o objeto fornecedor
-                                ),
-                              );
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 75,
-                                  height: 75,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: const Color.fromARGB(255, 83, 79, 79),
-                                    border: Border.all(color: const Color(0xFF20805F)),
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                SizedBox(
-                                  width: screenWidth * 0.7,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      fixedSize: const Size(280, 73),
-                                      backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.only(
-                                          topRight: Radius.circular(50.0),
-                                          bottomRight: Radius.circular(50.0),
-                                        ),
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => Fornecedor2(fornecedor: fornecedores[index]), // Passando o objeto fornecedor
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      fornecedores[index].nome, // Exibindo o nome do fornecedor
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddFornecedorDialog(context);
-        },
-        backgroundColor: const Color(0xFF20805F),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-    );
-  }
+        const SizedBox(height: 4),
+        // Exibição do telefone
+        Text(
+          'Telefone: ${fornecedor.telefone}',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: screenWidth * 0.04,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
+}
 
-  // Função para mostrar o diálogo de adicionar fornecedor
+
   void _showAddFornecedorDialog(BuildContext context) {
     String nome = '';
     String cnpj = '';
@@ -204,56 +248,14 @@ class _FornecedorScreenState extends State<FornecedorScreen> {
         return AlertDialog(
           backgroundColor: const Color(0xFF393636),
           title: const Text('Adicionar Fornecedor', style: TextStyle(color: Colors.white)),
-          content: SizedBox(
-            height: 250,
-            child: Column(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Nome',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) => nome = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'CNPJ',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) => cnpj = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Telefone',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) => telefone = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Descrição',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) => descricao = value,
-                ),
-              ],
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTextField('Nome', (value) => nome = value),
+              _buildTextField('CNPJ', (value) => cnpj = value),
+              _buildTextField('Telefone', (value) => telefone = value),
+              _buildTextField('Descrição', (value) => descricao = value),
+            ],
           ),
           actions: [
             TextButton(
@@ -261,43 +263,16 @@ class _FornecedorScreenState extends State<FornecedorScreen> {
               child: const Text('Cancelar', style: TextStyle(color: Colors.white)),
             ),
             TextButton(
-              onPressed: () async {
-                if (nome.isNotEmpty && cnpj.isNotEmpty && telefone.isNotEmpty && descricao.isNotEmpty) {
-                  try {
-                    // Cria uma instância de Fornecedor
-                    Fornecedor novoFornecedor = Fornecedor(
-                      nome: nome,
-                      cnpj: cnpj,
-                      telefone: telefone,
-                      descricao: descricao,
-                    );
-
-                    // Adiciona o fornecedor à lista
-                    setState(() {
-                      fornecedores.add(novoFornecedor);
-                    });
-
-                    // Chama o serviço para adicionar o fornecedor no backend
-                    FornecedorService fornecedorService = FornecedorService();
-                    await fornecedorService.createFornecedor(nome, cnpj, telefone, descricao);
-
-                    // Fecha o diálogo após a inserção
-                    Navigator.of(context).pop();
-                  } catch (e) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Erro'),
-                        content: Text(e.toString()),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+              onPressed: () {
+                if (nome.isNotEmpty) {
+                  final novoFornecedor = Fornecedor(
+                    nome: nome,
+                    cnpj: cnpj,
+                    telefone: telefone,
+                    descricao: descricao,
+                  );
+                  _addFornecedor(novoFornecedor);
+                  Navigator.of(context).pop();
                 }
               },
               child: const Text('Adicionar', style: TextStyle(color: Colors.white)),
@@ -305,6 +280,20 @@ class _FornecedorScreenState extends State<FornecedorScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildTextField(String label, ValueChanged<String> onChanged) {
+    return TextField(
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white),
+        enabledBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
+        ),
+      ),
+      style: const TextStyle(color: Colors.white),
+      onChanged: onChanged,
     );
   }
 }

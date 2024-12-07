@@ -1,89 +1,34 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FornecedorService {
-  final String baseUrl = 'http://10.0.2.2:3001'; // Substitua pela URL do seu backend
+  final supabase = Supabase.instance.client;
 
-  // Função para obter fornecedores
-  Future<List<dynamic>> getFornecedores({String? nome, String? cnpj}) async {
-    try {
-      Map<String, String> queryParameters = {};
-      if (nome != null) queryParameters['nome'] = nome;
-      if (cnpj != null) queryParameters['cnpj'] = cnpj;
-
-      final uri = Uri.parse('$baseUrl/fornecedor').replace(queryParameters: queryParameters);
-      final response = await http.get(uri);
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else if (response.statusCode == 404) {
-        return [];
-      } else {
-        throw Exception('Erro ao carregar fornecedores: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      throw Exception('Erro: $e');
-    }
-  }
-
-  // Função para adicionar um fornecedor
-  Future<void> createFornecedor(String nome, String cnpj, String telefone, String descricao) async {
-    try {
-      final uri = Uri.parse('$baseUrl/fornecedor');
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
+  // Atualiza os dados de um fornecedor no Supabase
+  Future<void> updateFornecedor(String cnpj, String nome, String novoCnpj, String telefone, String descricao) async {
+    final response = await supabase
+        .from('fornecedor') // Nome da tabela
+        .update({
           'nome': nome,
-          'cnpj': cnpj,
+          'cnpj': novoCnpj,
           'telefone': telefone,
           'descricao': descricao,
-        }),
-      );
+        })
+        .eq('cnpj', cnpj); // Localiza pelo CNPJ original
 
-      if (response.statusCode != 201) {
-        throw Exception('Erro ao criar fornecedor: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      throw Exception('Erro: $e');
+    if (response.error != null) {
+      throw Exception(response.error!.message);
     }
   }
 
-  // Função para atualizar um fornecedor
-  Future<void> updateFornecedor(String id, String nome, String cnpj, String telefone, String descricao) async {
-    try {
-      final uri = Uri.parse('$baseUrl/fornecedor/$id');
-      final response = await http.put(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'nome': nome,
-          'cnpj': cnpj,
-          'telefone': telefone,
-          'descricao': descricao,
-        }),
-      );
+  // Exclui um fornecedor no Supabase
+  Future<void> deleteFornecedor(String cnpj) async {
+    final response = await supabase
+        .from('fornecedor') // Nome da tabela
+        .delete()
+        .eq('cnpj', cnpj); // Localiza pelo CNPJ
 
-      if (response.statusCode != 200) {
-        throw Exception('Erro ao atualizar fornecedor: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      throw Exception('Erro: $e');
+    if (response.error != null) {
+      throw Exception(response.error!.message);
     }
   }
-
-  // Função para deletar um fornecedor
-  Future<void> deleteFornecedor(String id) async {
-    try {
-      final uri = Uri.parse('$baseUrl/fornecedor/$id');
-      final response = await http.delete(uri);
-
-      if (response.statusCode != 200 && response.statusCode != 204) {
-        throw Exception('Erro ao excluir fornecedor: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      throw Exception('Erro: $e');
-    }
-  }
-  
 }

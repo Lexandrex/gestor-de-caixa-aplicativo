@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/troca2.dart'; // Tela de detalhes
+import 'package:flutter_application_1/services/vendas_service.dart'; // Serviço para buscar vendas
+import 'package:intl/intl.dart'; // Para formatar a data
 
 class Troca extends StatefulWidget {
   const Troca({super.key});
@@ -8,6 +11,93 @@ class Troca extends StatefulWidget {
 }
 
 class _TrocaState extends State<Troca> {
+  List<dynamic> vendas = []; // Lista para armazenar vendas
+  bool isLoading = true; // Indica se os dados estão sendo carregados
+  final ApiService apiService = ApiService(); // Serviço da API
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVendas(); // Carrega as vendas ao inicializar
+  }
+
+  Future<void> _loadVendas() async {
+    setState(() {
+      isLoading = true; // Mostra o indicador de carregamento
+    });
+
+    try {
+      // Chamada ao serviço para buscar vendas
+      final fetchedVendas = await apiService.getVendas();
+      setState(() {
+        vendas = fetchedVendas;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar vendas: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false; // Oculta o indicador de carregamento
+      });
+    }
+  }
+
+  // Função para formatar a data
+  String formatarDia(String? data) {
+    if (data == null) return 'Não informado';
+    try {
+      final parsedDate = DateTime.parse(data); // Converte a string em DateTime
+      return DateFormat('dd').format(parsedDate); // Formata para exibir apenas o dia
+    } catch (e) {
+      return 'Inválido'; // Caso a conversão falhe
+    }
+  }
+
+  // Método para criar os botões com o formato desejado
+  Widget _buildVendaItem(double screenWidth, dynamic venda) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaçamento entre os botões
+      child: SizedBox(
+        width: screenWidth * 0.85,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            fixedSize: Size(screenWidth * 0.85, 73),
+            backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+          ),
+          onPressed: () {
+            // Navega para a tela TrocaDetalhes passando a venda selecionada
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Troca2(troca: venda), // Passando a venda
+              ),
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Dia: ${formatarDia(venda['data'])}', // Formata a data para mostrar apenas o dia
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                ),
+              ),
+              Text(
+                'Total: R\$ ${venda['total'] ?? '0.00'}', // Mostra apenas o total
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,158 +105,33 @@ class _TrocaState extends State<Troca> {
       appBar: AppBar(
         title: const Text(
           'TROCA',
-          style: TextStyle(color: Colors.white, fontSize: 40),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 40,
+          ),
         ),
         backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back,
-              color: Colors.white), // Ícone de voltar branco
-          onPressed: () {
-            Navigator.pop(context); // Voltar para a tela anterior
-          },
-        ),
       ),
-      body: Column(
-        children: [
-          const Padding(padding: EdgeInsets.all(8.0)),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Text(
-                "DIA",
-                style: TextStyle(fontSize: 40, color: Colors.white),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildDataTable(),
-          const SizedBox(height: 8),
-          _buildTotalRow(),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Ação ao clicar no botão de edição
-          _openEditScreen();
-        },
-        backgroundColor: const Color(0xFF20805F),
-        child: const Icon(Icons.edit,
-            color: Colors.white), // Ícone de lápis branco
-      ),
-    );
-  }
-
-  void _openEditScreen() {
-    // Navegação ou lógica para abrir a tela de edição
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edição'),
-          content: const Text('Aqui você pode editar os dados.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fecha o diálogo
-              },
-              child: const Text('Fechar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Método para construir a tabela de dados
-  Widget _buildDataTable() {
-    return Table(
-      children: [
-        TableRow(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
-            color: Color.fromARGB(255, 83, 79, 79),
-          ),
-          children: [
-            _buildTableCell("HORA"),
-            _buildTableCell("12"),
-            _buildTableCell("20"),
-            _buildTableCell("TOTAL"),
-          ],
-        ),
-        TableRow(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
-            color: Color.fromARGB(255, 83, 79, 79),
-          ),
-          children: [
-            _buildTableCell("10:00"),
-            _buildTableCell("1"),
-            _buildTableCell("2"),
-            _buildTableCell("R\$ 52,00"),
-          ],
-        ),
-        TableRow(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
-            color: Color.fromARGB(255, 83, 79, 79),
-          ),
-          children: [
-            _buildTableCell("11:00"),
-            _buildTableCell("3"),
-            _buildTableCell("1"),
-            _buildTableCell("R\$ 42,00"),
-          ],
-        ),
-        TableRow(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
-            color: Color.fromARGB(255, 83, 79, 79),
-          ),
-          children: [
-            _buildTableCell("12:00"),
-            _buildTableCell("0"),
-            _buildTableCell("5"),
-            _buildTableCell("R\$ 100,00"),
-          ],
-        ),
-      ],
-    );
-  }
-
-  static Widget _buildTableCell(String text) {
-    return Container(
-      width: 120,
-      height: 50,
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildTotalRow() {
-    int totalQuantidade12 = 1 + 3 + 0;
-    int totalQuantidade20 = 2 + 1 + 5;
-    int totalGeral = (totalQuantidade12 * 12) + (totalQuantidade20 * 20);
-
-    return Table(
-      children: [
-        TableRow(
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: Colors.white, width: 2.0)),
-            color: Color.fromARGB(255, 83, 79, 79),
-          ),
-          children: [
-            _buildTableCell("TOTAL"),
-            _buildTableCell(totalQuantidade12.toString()),
-            _buildTableCell(totalQuantidade20.toString()),
-            _buildTableCell(
-                "R\$ ${totalGeral.toStringAsFixed(2).replaceAll('.', ',')}"),
-          ],
-        ),
-      ],
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : vendas.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Nenhuma troca encontrada',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: vendas.length,
+                  itemBuilder: (context, index) {
+                    final venda = vendas[index];
+                    return _buildVendaItem(
+                      MediaQuery.of(context).size.width, // Passando o screenWidth para o método
+                      venda,
+                    );
+                  },
+                ),
     );
   }
 }
