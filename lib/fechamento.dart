@@ -1,181 +1,137 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/fechamento2.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/gastos.dart';
-import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/troca.dart';
+import 'package:flutter_application_1/fechamento_detalhes.dart'; // Tela de detalhes
+import 'package:flutter_application_1/services/vendas_service.dart'; // Serviço para buscar vendas
+import 'package:intl/intl.dart'; // Para formatar a data
 
-class fechamento extends StatefulWidget {
-  const fechamento({super.key});
+class Fechamento extends StatefulWidget {
+  const Fechamento({super.key});
 
   @override
-  _fechamentoState createState() => _fechamentoState();
+  _FechamentoState createState() => _FechamentoState();
 }
 
-class _fechamentoState extends State<fechamento> {
-  bool _isExpanded = false; // Estado para controlar a expansão da AppBar
+class _FechamentoState extends State<Fechamento> {
+  List<dynamic> vendas = []; // Lista para armazenar vendas
+  bool isLoading = true; // Indica se os dados estão sendo carregados
+  final ApiService apiService = ApiService(); // Serviço da API
 
-  void _toggleExpansion() {
+  @override
+  void initState() {
+    super.initState();
+    _loadVendas(); // Carrega as vendas ao inicializar
+  }
+
+  Future<void> _loadVendas() async {
     setState(() {
-      _isExpanded = !_isExpanded; // Alterna o estado de expansão
+      isLoading = true; // Mostra o indicador de carregamento
     });
+
+    try {
+      // Chamada à API para buscar vendas
+      final fetchedVendas = await apiService.getVendas();
+      setState(() {
+        vendas = fetchedVendas;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar vendas: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false; // Oculta o indicador de carregamento
+      });
+    }
   }
 
-   void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
-    );
+  // Função para formatar a data
+  String formatarDia(String? data) {
+    if (data == null) return 'Não informado';
+    try {
+      final parsedDate = DateTime.parse(data); // Converte a string em DateTime
+      return DateFormat('dd').format(parsedDate); // Formata para exibir apenas o dia
+    } catch (e) {
+      return 'Inválido'; // Caso a conversão falhe
+    }
   }
 
-  void _navigateToFornecedor() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
-    );
-  }
-
-  void _navigateToGastos() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
-    );
-  }
-
-  void _navigateToFechamento2() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Fechamento2()),
+  // Método para criar os botões com o formato desejado
+  Widget _buildVendaItem(double screenWidth, dynamic venda) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaçamento entre os botões
+      child: SizedBox(
+        width: screenWidth * 0.85,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            fixedSize: Size(screenWidth * 0.85, 73),
+            backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+          ),
+          onPressed: () {
+            // Navega para a tela FechamentoDetalhes passando a venda selecionada
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FechamentoDetalhes(venda: venda), // Passando a venda
+              ),
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Dia: ${formatarDia(venda['data'])}', // Formata a data para mostrar apenas o dia
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                ),
+              ),
+              Text(
+                'Total: R\$ ${venda['total'] ?? '0.00'}', // Mostra apenas o total
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF393636), // Cor de fundo igual à Tela1
+      backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0), // Adiciona padding ao título
-          child: Text(
-            'FECHAMENTO', // Título igual ao da Tela1
-            style: TextStyle(
-              color: Color.fromARGB(255, 255, 255, 255),
-              fontSize: 40,
-            ),
+        title: const Text(
+          'FECHAMENTO',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 40,
           ),
         ),
-        backgroundColor: const Color(0xFF20805F), // Cor de fundo igual à Tela1
+        backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
-        ),
       ),
-      body: Column(
-        children: [
-          if (_isExpanded) // Exibe as opções se estiver expandido
-            Container(
-              color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : vendas.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Nenhuma venda encontrada',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToGastos,
-                    child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(8.0)),
-                  const Text(
-                    "ANO",
-                    style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 255, 255, 255)),
-                  ),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "MÊS",
-                        style: TextStyle(fontSize: 40, color: Color.fromARGB(255, 255, 255, 255)),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      SizedBox(width: 40,),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF20805F), width: 2),
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          fixedSize: const Size(100, 50),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        child: const Text(
-                          "DIA",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8,),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToFechamento2,
-                        child: null,
-                      ),
-                    ],
-                  ), 
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(331, 73),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        onPressed: _navigateToFechamento2,
-                        child: null,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+                )
+              : ListView.builder(
+                  itemCount: vendas.length,
+                  itemBuilder: (context, index) {
+                    final venda = vendas[index];
+                    return _buildVendaItem(
+                      MediaQuery.of(context).size.width, // Passando o screenWidth para o método
+                      venda,
+                    );
+                  },
+                ),
     );
   }
 }

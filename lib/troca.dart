@@ -1,251 +1,137 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/gastos.dart';
-import 'package:flutter_application_1/troca2.dart';
+import 'package:flutter_application_1/troca2.dart'; // Tela de detalhes
+import 'package:flutter_application_1/services/vendas_service.dart'; // Serviço para buscar vendas
+import 'package:intl/intl.dart'; // Para formatar a data
 
-class TROCA extends StatefulWidget {
-  const TROCA({super.key});
+class Troca extends StatefulWidget {
+  const Troca({super.key});
 
   @override
-  _TROCAState createState() => _TROCAState();
+  _TrocaState createState() => _TrocaState();
 }
 
-class _TROCAState extends State<TROCA> {
-  bool _isExpanded = false;
+class _TrocaState extends State<Troca> {
+  List<dynamic> vendas = []; // Lista para armazenar vendas
+  bool isLoading = true; // Indica se os dados estão sendo carregados
+  final ApiService apiService = ApiService(); // Serviço da API
 
-  void _toggleExpansion() {
+  @override
+  void initState() {
+    super.initState();
+    _loadVendas(); // Carrega as vendas ao inicializar
+  }
+
+  Future<void> _loadVendas() async {
     setState(() {
-      _isExpanded = !_isExpanded;
+      isLoading = true; // Mostra o indicador de carregamento
     });
+
+    try {
+      // Chamada ao serviço para buscar vendas
+      final fetchedVendas = await apiService.getVendas();
+      setState(() {
+        vendas = fetchedVendas;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao carregar vendas: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false; // Oculta o indicador de carregamento
+      });
+    }
   }
 
-  void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
+  // Função para formatar a data
+  String formatarDia(String? data) {
+    if (data == null) return 'Não informado';
+    try {
+      final parsedDate = DateTime.parse(data); // Converte a string em DateTime
+      return DateFormat('dd').format(parsedDate); // Formata para exibir apenas o dia
+    } catch (e) {
+      return 'Inválido'; // Caso a conversão falhe
+    }
+  }
+
+  // Método para criar os botões com o formato desejado
+  Widget _buildVendaItem(double screenWidth, dynamic venda) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaçamento entre os botões
+      child: SizedBox(
+        width: screenWidth * 0.85,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            fixedSize: Size(screenWidth * 0.85, 73),
+            backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+          ),
+          onPressed: () {
+            // Navega para a tela TrocaDetalhes passando a venda selecionada
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Troca2(troca: venda), // Passando a venda
+              ),
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Dia: ${formatarDia(venda['data'])}', // Formata a data para mostrar apenas o dia
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                ),
+              ),
+              Text(
+                'Total: R\$ ${venda['total'] ?? '0.00'}', // Mostra apenas o total
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  void _navigateToGastos() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Gastos()),
-    );
-  }
-
-  void _navigateToFornecedor() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
-    );
-  }
-  
-  void _navigateToTrocaEdicao() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Troca2()),
-    );
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF393636),
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text(
-            'TROCAS',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 40,
-            ),
+        title: const Text(
+          'TROCA',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 40,
           ),
         ),
         backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion,
-        ),
       ),
-      body: Column(
-        children: [
-          if (_isExpanded)
-            Container(
-              color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(2.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : vendas.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Nenhuma troca encontrada',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
-                  TextButton(
-                    onPressed: _navigateToGastos,
-                    child: const Text('GASTOS', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Center(
-              child: Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(8.0)),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        "DIA",
-                        style: TextStyle(fontSize: 40, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFF20805F), width: 2),
-                          fixedSize: const Size(100, 50),
-                          backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        child: const Text(
-                          "TODOS",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Table (
-                    children: [
-                      TableRow(
-                        decoration: const BoxDecoration(
-                          border: Border(bottom: BorderSide(color: Colors.white, width: 2.0)),
-                          color: Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("12,00", style: TextStyle(color: Colors.white)),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("20,00", style: TextStyle(color: Colors.white)),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("TOTAL", style: TextStyle(color: Colors.white)),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("HORA", style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  Container(
-                    width: 410,
-                    height: 300,
-                    color: const Color.fromARGB(255, 83, 79, 79),
-                  ),
-                  Table(
-                    children: [
-                      TableRow(
-                        decoration: const BoxDecoration(
-                          border: Border(top: BorderSide(color: Colors.white, width: 2.0)),
-                          color: Color.fromARGB(255, 83, 79, 79),
-                        ),
-                        children: [
-                          Container(
-                            child: null,
-                          ),
-                          Container(
-                            child: null,
-                          ),
-                          Container(
-                            child: null,
-                          ),
-                          Container(
-                            width: 100,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: const Text("TOTAL", style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        GestureDetector(
-                          onTap: _navigateToTrocaEdicao,
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 14),
-                            width: 75,
-                            height: 75,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  width: 75,
-                                  height: 75,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(0xFF20805F),
-                                  ),
-                                ),
-                                const Positioned(
-                                  top: 25,
-                                  left: 25,
-                                  child: Icon(
-                                    Icons.edit,
-                                    size: 25,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                  )
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+                )
+              : ListView.builder(
+                  itemCount: vendas.length,
+                  itemBuilder: (context, index) {
+                    final venda = vendas[index];
+                    return _buildVendaItem(
+                      MediaQuery.of(context).size.width, // Passando o screenWidth para o método
+                      venda,
+                    );
+                  },
+                ),
     );
   }
 }

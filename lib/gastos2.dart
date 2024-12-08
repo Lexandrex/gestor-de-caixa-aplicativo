@@ -1,175 +1,139 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/fechamento.dart';
-import 'package:flutter_application_1/fornecedor.dart';
-import 'package:flutter_application_1/troca.dart';
+import 'services/gastos_service.dart'; // Importando o serviço de gastos
+
+const Color corTexto = Color.fromARGB(255, 255, 255, 255);
+const Color corFundo = Color(0xFF393636);
+const Color corAppBar = Color(0xFF20805F);
 
 class Gastos2 extends StatefulWidget {
-  const Gastos2({super.key});
+  final Map<String, dynamic> gasto;
+
+  const Gastos2({Key? key, required this.gasto}) : super(key: key);
 
   @override
   _Gastos2State createState() => _Gastos2State();
 }
 
 class _Gastos2State extends State<Gastos2> {
-  bool _isExpanded = false;
+  final TextEditingController _valorController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
 
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
-
-  void _navigateToTela1() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const Tela1()),
-    );
-  }
-
-  void _navigateToFornecedor() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fornecedor()),
-    );
-  }
-
-  void _navigateToFechamento() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const fechamento()),
-    );
-  }
-
-  void _navigateToTroca() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const TROCA()),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _valorController.text = widget.gasto['quantidade'].toString();
+    _descricaoController.text = widget.gasto['descricao'] ?? '';
   }
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF393636),
+      backgroundColor: corFundo,
       appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.all(8.0),
+        title: Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Text(
-            'GASTOS',
+            'GASTO',
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 40,
+              color: corTexto,
+              fontSize: screenWidth * 0.1,
             ),
           ),
         ),
-        backgroundColor: const Color(0xFF20805F),
+        backgroundColor: corAppBar,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion,
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Column(
-        children: [
-          if (_isExpanded)
-            Container(
-              color: const Color(0xFF20805F),
-              padding: const EdgeInsets.all(4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: _navigateToTela1,
-                    child: const Text('RELATÓRIO', style: TextStyle(color: Colors.white)),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildTextField(_valorController, 'Valor', keyboardType: TextInputType.number),
+            const SizedBox(height: 10),
+            _buildTextField(_descricaoController, 'Descrição', maxLines: 5),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    // Atualizar gasto no Supabase
+                    GastoService gastoService = GastoService();
+                    try {
+                      await gastoService.updateGasto(
+                        widget.gasto['id'], // Usando o ID do gasto original
+                        double.parse(_valorController.text),
+                        _descricaoController.text,
+                      );
+                      Navigator.pop(context, true); // Indica sucesso ao voltar
+                    } catch (e) {
+                      _showErrorDialog('Erro ao salvar: $e');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: corAppBar,
                   ),
-                  TextButton(
-                    onPressed: _navigateToFornecedor,
-                    child: const Text('FORNECEDOR', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToFechamento,
-                    child: const Text('FECHAMENTO', style: TextStyle(color: Colors.white)),
-                  ),
-                  TextButton(
-                    onPressed: _navigateToTroca,
-                    child: const Text('TROCA', style: TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Center(
-                child: Table(
-                  children: [
-                    _buildTableRow(),
-                    _buildTableRow(),
-                    _buildTableRow(),
-                  ],
+                  child: const Text('Salvar Alterações', style: TextStyle(color: corTexto)),
                 ),
-              ),
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(right: 14),
-                width: 75,
-                height: 75,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 75,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF20805F),
-                      ),
-                    ),
-                    const Positioned(
-                      top: 25,
-                      left: 25,
-                      child: Icon(
-                        Icons.edit,
-                        size: 25,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                ElevatedButton(
+                  onPressed: () async {
+                    // Excluir gasto no Supabase
+                    GastoService gastoService = GastoService();
+                    try {
+                      await gastoService.deleteGasto(widget.gasto['id']);
+                      Navigator.pop(context, true); // Indica sucesso ao voltar
+                    } catch (e) {
+                      _showErrorDialog('Erro ao excluir: $e');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  child: const Text('Excluir Gasto', style: TextStyle(color: corTexto)),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  TableRow _buildTableRow() {
-    return TableRow(
-      children: [
-        Container(
-          width: 200,
-          height: 100,
-          color: const Color.fromARGB(255, 83, 79, 79),
-          margin: const EdgeInsets.only(bottom: 100),
-        ),
-        Container(
-          width: 50,
-          height: 100,
-          child: const Center(
-            child: Icon(
-              Icons.delete,
-              size: 30,
-              color: Colors.red,
+  Widget _buildTextField(TextEditingController controller, String label, {int maxLines = 1, TextInputType? keyboardType}) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: corTexto),
+        border: const OutlineInputBorder(),
+      ),
+      style: const TextStyle(color: corTexto),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Erro', style: TextStyle(color: Colors.red)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK', style: TextStyle(color: corTexto)),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
