@@ -35,85 +35,95 @@ class _GastosScreenState extends State<GastosScreen> {
   double valor = 0.0;
   String descricao = '';
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        backgroundColor: const Color(0xFF393636),
-        title: const Text(
-          'Adicionar Gasto',
-          style: TextStyle(color: Colors.white), // Título em branco
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Valor',
-                labelStyle: TextStyle(color: Colors.white), // Cor do rótulo
-              ),
-              style: const TextStyle(color: Colors.white), // Cor do texto no campo
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              onChanged: (value) {
-                valor = double.tryParse(value) ?? 0.0;
-              },
+ showDialog(
+  context: context,
+  builder: (context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF393636),
+      title: const Text(
+        'Adicionar Gasto',
+        style: TextStyle(color: Colors.white), // Título em branco
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            decoration: const InputDecoration(
+              labelText: 'Valor',
+              labelStyle: TextStyle(color: Colors.white), // Cor do rótulo
             ),
-            const SizedBox(height: 16), // Espaçamento entre os campos
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Descrição',
-                labelStyle: TextStyle(color: Colors.white), // Cor do rótulo
-              ),
-              style: const TextStyle(color: Colors.white), // Cor do texto no campo
-              onChanged: (value) {
-                descricao = value;
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Cancelar',
-              style: TextStyle(color: Colors.white), // Cor do texto no botão
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (valor > 0 && descricao.isNotEmpty) {
-                // Aqui você deve adicionar a lógica para inserir o gasto no banco de dados
-                try {
-                  final response = await Supabase.instance.client
-                      .from('gastos')
-                      .insert([
-                        {
-                          'quantidade': valor,
-                          'descricao': descricao,
-                          'data': DateTime.now().toIso8601String()
-                        }
-                      ]);
-
-                  if (response.error != null) {
-                    throw Exception(response.error!.message);
-                  }
-
-                  Navigator.of(context).pop();
-                  setState(() {}); // Atualiza a tela
-                } catch (e) {
-                  print('Erro ao adicionar gasto: $e');
-                }
-              }
+            style: const TextStyle(color: Colors.white), // Cor do texto no campo
+            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            onChanged: (value) {
+              valor = double.tryParse(value) ?? 0.0;
             },
-            child: const Text(
-              'Adicionar',
-              style: TextStyle(color: Colors.white), // Cor do texto no botão
+          ),
+          const SizedBox(height: 16), // Espaçamento entre os campos
+          TextField(
+            decoration: const InputDecoration(
+              labelText: 'Descrição',
+              labelStyle: TextStyle(color: Colors.white), // Cor do rótulo
             ),
+            style: const TextStyle(color: Colors.white), // Cor do texto no campo
+            onChanged: (value) {
+              descricao = value;
+            },
           ),
         ],
-      );
-    },
-  );
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(color: Colors.white), // Cor do texto no botão
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            if (valor > 0 && descricao.isNotEmpty) {
+              try {
+                // Obtendo a data e hora atual do celular
+                DateTime dataAtual = DateTime.now();
+                
+                // Formatando a data e hora
+                String dataFormatada = DateFormat('yyyy-MM-dd HH:mm:ss').format(dataAtual); // Para a data
+                String horaFormatada = DateFormat('HH:mm:ss').format(dataAtual); // Para a hora
+
+                // Enviando os dados para o Supabase
+                final response = await Supabase.instance.client
+                    .from('gastos')
+                    .insert([
+                      {
+                        'quantidade': valor,
+                        'descricao': descricao,
+                        'data': dataFormatada, // Envia a data com hora
+                        'hora': horaFormatada, // Envia a hora formatada
+                      }
+                    ]);
+
+                if (response.error != null) {
+                  throw Exception(response.error!.message);
+                }
+
+                Navigator.of(context).pop();
+                setState(() {}); // Atualiza a tela
+              } catch (e) {
+                print('Erro ao adicionar gasto: $e');
+              }
+            }
+          },
+          child: const Text(
+            'Adicionar',
+            style: TextStyle(color: Colors.white), // Cor do texto no botão
+          ),
+        ),
+      ],
+    );
+  },
+);
+
+
 }
 
 
