@@ -72,7 +72,7 @@ class _Troca2State extends State<Troca2> {
                     try {
                       // Atualiza os campos específicos da venda
                       await vendasService.updateVendaCampos(
-                        widget.troca['id'], // Usando o ID da venda original
+                        widget.troca['id_venda'], // Usando o ID da venda original
                         quantidade12: int.parse(_quantidade12Controller.text),
                         quantidade20: int.parse(_quantidade20Controller.text),
                         formaPagamento: _formaPagamentoController.text,
@@ -92,7 +92,7 @@ class _Troca2State extends State<Troca2> {
                     // Excluir a venda no Supabase
                     ApiService vendasService = ApiService();
                     try {
-                      await vendasService.deleteVendas(widget.troca['id']);
+                      await vendasService.deleteVendas(widget.troca['id_venda']);
                       Navigator.pop(context, true); // Indica sucesso ao voltar
                     } catch (e) {
                       _showErrorDialog('Erro ao excluir: $e');

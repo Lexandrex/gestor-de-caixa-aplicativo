@@ -32,7 +32,7 @@ class ApiService {
       final response = await supabase
           .from('vendas')
           .update(vendaData)
-          .eq('id', idVenda)
+          .eq('id_venda', idVenda)
           .select()
           .single();
 
@@ -69,7 +69,7 @@ class ApiService {
     final response = await supabase
         .from('vendas')
         .update(vendaData)
-        .eq('id', idVenda)
+        .eq('id_venda', idVenda)
         .select()
         .single();
 
@@ -83,7 +83,7 @@ class ApiService {
   // Função para deletar uma venda
   Future<void> deleteVendas(int idVenda) async {
     try {
-      await supabase.from('vendas').delete().eq('id', idVenda);
+      await supabase.from('vendas').delete().eq('id_venda', idVenda);
     } catch (e) {
       throw Exception('Erro ao deletar a venda: $e');
     }
