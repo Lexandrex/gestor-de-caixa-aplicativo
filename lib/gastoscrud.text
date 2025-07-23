@@ -1,0 +1,182 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
+
+class GastosScreen extends StatefulWidget {
+  @override
+  _GastosScreenState createState() => _GastosScreenState();
+}
+
+class _GastosScreenState extends State<GastosScreen> {
+  // Função para buscar os dados da tabela "gastos" no Supabase
+  Future<List<dynamic>> getGastos() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('gastos') // Nome da tabela no Supabase
+          .select(); // Realiza a consulta
+
+      // Se não houver dados ou a resposta for vazia, retornamos uma lista vazia
+      if (response == null || response.isEmpty) {
+        print('Nenhum gasto encontrado.');
+        return [];
+      }
+
+      // Retorna os dados como lista
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Erro ao buscar gastos: $e');
+      return [];
+    }
+  }
+
+  // Função para exibir o diálogo de adicionar um novo gasto
+  void _showAddGastoDialog() {
+    double valor = 0.0;
+    String descricao = '';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Adicionar Gasto'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(labelText: 'Valor'),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                onChanged: (value) {
+                  valor = double.tryParse(value) ?? 0.0;
+                },
+              ),
+              TextField(
+                decoration: const InputDecoration(labelText: 'Descrição'),
+                onChanged: (value) {
+                  descricao = value;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (valor > 0 && descricao.isNotEmpty) {
+                  // Aqui você deve adicionar a lógica para inserir o gasto no banco de dados
+                  try {
+                    final response = await Supabase.instance.client
+                        .from('gastos')
+                        .insert([
+                          {'quantidade': valor, 'descricao': descricao, 'data': DateTime.now().toIso8601String()}
+                        ]);
+                    if (response.error != null) {
+                      throw Exception(response.error!.message);
+                    }
+                    Navigator.of(context).pop();
+                    setState(() {}); // Atualiza a tela
+                  } catch (e) {
+                    print('Erro ao adicionar gasto: $e');
+                  }
+                }
+              },
+              child: const Text('Adicionar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF393636), // Cor de fundo modificada
+      appBar: AppBar(
+        title: const Text('Gastos'),
+        backgroundColor: const Color(0xFF20805F),
+        centerTitle: true,
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: getGastos(), // Chama a função que retorna os dados dos gastos
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            // Se houver dados
+            List<dynamic> gastos = snapshot.data!;
+            return ListView.builder(
+              itemCount: gastos.length,
+              itemBuilder: (context, index) {
+                var gasto = gastos[index];
+                return _buildGastoItem(screenWidth, gasto); // Exibe o item do gasto
+              },
+            );
+          } else {
+            return const Center(child: Text('Nenhum gasto encontrado'));
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddGastoDialog, // Chama o diálogo para adicionar um novo gasto
+        backgroundColor: const Color(0xFF20805F),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  // Método para exibir um item de gasto
+  Widget _buildGastoItem(double screenWidth, dynamic gasto) {
+    // Função para formatar a data, exibindo apenas o dia
+    String formatarDia(String? data) {
+      if (data == null) return 'Não informado';
+      try {
+        final parsedDate = DateTime.parse(data); // Converte a string para DateTime
+        return DateFormat('dd').format(parsedDate); // Formata para exibir apenas o dia
+      } catch (e) {
+        return 'Inválido'; // Caso a conversão falhe
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaçamento entre os itens
+      child: SizedBox(
+        width: screenWidth * 0.85,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            fixedSize: Size(screenWidth * 0.85, 73),
+            backgroundColor: const Color.fromARGB(255, 83, 79, 79),
+          ),
+          onPressed: () {
+            // Lógica do botão, se necessário
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Dia: ${formatarDia(gasto['data'])}', // Formata e exibe a data
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho de fonte responsivo
+                ),
+              ),
+              Text(
+                'Total: R\$ ${gasto['quantidade'] ?? '0.00'}', // Exibe o total gasto
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05, // Tamanho de fonte responsivo
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
