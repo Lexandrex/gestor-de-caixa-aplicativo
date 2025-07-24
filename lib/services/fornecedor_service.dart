@@ -1,7 +1,30 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'base_service.dart';
 
-class FornecedorService {
-  final supabase = Supabase.instance.client;
+class FornecedorService extends BaseService {
+
+  // Adiciona um novo fornecedor
+  Future<void> addFornecedor(fornecedor) async {
+    final response = await supabase
+        .from('fornecedor')
+        .insert(fornecedor.toJson());
+
+    if (response.error != null) {
+      throw Exception(response.error!.message);
+    }
+  }
+
+  // Busca todos os fornecedores
+  Future<List<dynamic>> getFornecedores() async {
+    try {
+      final response = await supabase.from('fornecedor').select();
+      if (response.isEmpty) {
+        throw Exception('Nenhum fornecedor encontrado');
+      }
+      return response;
+    } catch (e) {
+      throw Exception('Erro ao buscar fornecedores: $e');
+    }
+  }
 
   // Atualiza os dados de um fornecedor no Supabase
   Future<void> updateFornecedor(String cnpj, String nome, String novoCnpj, String telefone, String descricao) async {

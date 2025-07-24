@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/services/vendas_service.dart'; // Serviço para atualizar a venda
+import 'package:flutter_application_2/services/troca_service.dart';
 
 const Color corTexto = Color.fromARGB(255, 255, 255, 255);
 const Color corFundo = Color(0xFF393636);
@@ -7,9 +7,13 @@ const Color corAppBar = Color(0xFF20805F);
 
 class Troca2 extends StatefulWidget {
   final Map<String, dynamic> troca;
+  final TrocaService trocaService;
 
-  // ignore: use_super_parameters
-  const Troca2({Key? key, required this.troca}) : super(key: key);
+  const Troca2({
+    super.key,
+    required this.troca,
+    required this.trocaService,
+  });
 
   @override
   // ignore: library_private_types_in_public_api
@@ -69,15 +73,14 @@ class _Troca2State extends State<Troca2> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    // Atualizar a venda no Supabase
-                    ApiService vendasService = ApiService();
                     try {
-                      // Atualiza os campos específicos da venda
-                      await vendasService.updateVendaCampos(
-                        widget.troca['id_venda'], // Usando o ID da venda original
-                        quantidade12: int.parse(_quantidade12Controller.text),
-                        quantidade20: int.parse(_quantidade20Controller.text),
-                        formaPagamento: _formaPagamentoController.text,
+                      await widget.trocaService.updateTroca(
+                        widget.troca['id'],
+                        {
+                          'quantidade_12': int.parse(_quantidade12Controller.text),
+                          'quantidade_20': int.parse(_quantidade20Controller.text),
+                          'forma_pagamento': _formaPagamentoController.text,
+                        },
                       );
                       // ignore: use_build_context_synchronously
                       Navigator.pop(context, true); // Indica sucesso ao voltar
@@ -92,10 +95,8 @@ class _Troca2State extends State<Troca2> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    // Excluir a venda no Supabase
-                    ApiService vendasService = ApiService();
                     try {
-                      await vendasService.deleteVendas(widget.troca['id_venda']);
+                      await widget.trocaService.deleteTroca(widget.troca['id']);
                       // ignore: use_build_context_synchronously
                       Navigator.pop(context, true); // Indica sucesso ao voltar
                     } catch (e) {

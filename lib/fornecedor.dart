@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'fornecedor2.dart';
+import 'services/fornecedor_service.dart';
 
 class Fornecedor {
   final String nome;
@@ -45,6 +45,7 @@ class FornecedorScreen extends StatefulWidget {
 }
 
 class _FornecedorScreenState extends State<FornecedorScreen> {
+  final FornecedorService _fornecedorService = FornecedorService();
   List<Fornecedor> fornecedores = [];
   bool isLoading = true;
 
@@ -55,15 +56,11 @@ class _FornecedorScreenState extends State<FornecedorScreen> {
   }
 
   // Busca os fornecedores do Supabase
-  // Função para buscar fornecedores do Supabase
+  // Função para buscar fornecedores usando o service
 Future<void> _fetchFornecedores() async {
   try {
-    // Recupera os fornecedores diretamente
-    final List<dynamic> response = await Supabase.instance.client
-        .from('fornecedor') // Nome da tabela no Supabase
-        .select();
+    final response = await _fornecedorService.getFornecedores();
 
-    // Se não houver erro, processa os dados
     setState(() {
       fornecedores = response.map((f) {
         return Fornecedor(
@@ -76,28 +73,20 @@ Future<void> _fetchFornecedores() async {
       isLoading = false;
     });
   } catch (e) {
-    // Em caso de erro, exibe uma mensagem e atualiza o estado
     setState(() {
       isLoading = false;
     });
-
     _showErrorDialog('Erro ao carregar fornecedores: $e');
   }
 }
 
 
 
-  // Adiciona um novo fornecedor ao Supabase
+  // Adiciona um novo fornecedor usando o service
   Future<void> _addFornecedor(Fornecedor fornecedor) async {
     try {
-      final response = await Supabase.instance.client
-          .from('fornecedor') // Nome da tabela no Supabase
-          .insert(fornecedor.toJson());
-
-      if (response.error != null) {
-        throw Exception(response.error!.message);
-      }
-
+      await _fornecedorService.addFornecedor(fornecedor);
+      
       // Atualiza a lista de fornecedores localmente
       setState(() {
         fornecedores.add(fornecedor);

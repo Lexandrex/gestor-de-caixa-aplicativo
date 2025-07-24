@@ -1,28 +1,43 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'base_service.dart';
 
-class ApiService {
-  final SupabaseClient supabase = Supabase.instance.client;
+class VendasService extends BaseService {
 
   // Função para obter vendas (com filtros opcionais)
-  Future<List<dynamic>> getVendas({String? formaPagamento, String? date}) async {
+  Future<List<dynamic>> getVendas({int? lojaId, String? mes, String? dia}) async {
     try {
-      // Inicia a query
       var query = supabase.from('vendas').select();
-
-      // Aplica filtros, se existirem
-      if (formaPagamento != null) {
-        query = query.eq('formaPagamento', formaPagamento);
+      
+      if (lojaId != null) {
+        query = query.eq('loja', lojaId);
+      }
+      if (mes != null) {
+        query = query.ilike('data', '$mes%');
+      }
+      if (dia != null) {
+        query = query.eq('data', dia);
       }
 
-      if (date != null) {
-        query = query.eq('date', date);
-      }
-
-      // Executa a query e retorna os resultados
       final response = await query;
-      return response as List<dynamic>;
+      if (response.isEmpty) {
+        throw Exception('Nenhuma venda encontrada');
+      }
+      return response;
     } catch (e) {
-      throw Exception('Erro ao carregar vendas: $e');
+      throw Exception('Erro ao buscar vendas: $e');
+    }
+  }
+
+  // Busca todas as lojas
+  @override
+  Future<List<Map<String, dynamic>>> getLojas() async {
+    try {
+      final response = await supabase.from('lojas').select();
+      if (response.isEmpty) {
+        throw Exception('Nenhuma loja encontrada');
+      }
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw Exception('Erro ao buscar lojas: $e');
     }
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/troca2.dart'; // Tela de detalhes
-import 'package:flutter_application_2/services/vendas_service.dart'; // Serviço para buscar vendas
-import 'package:intl/intl.dart'; // Para formatar a data
+import 'package:flutter_application_2/troca2.dart';
+import 'package:flutter_application_2/services/troca_service.dart';
+import 'package:intl/intl.dart';
 
 class Troca extends StatefulWidget {
   const Troca({super.key});
@@ -12,26 +12,25 @@ class Troca extends StatefulWidget {
 }
 
 class _TrocaState extends State<Troca> {
-  List<dynamic> vendas = []; // Lista para armazenar vendas
+  List<dynamic> trocas = []; // Lista para armazenar trocas
   bool isLoading = true; // Indica se os dados estão sendo carregados
-  final ApiService apiService = ApiService(); // Serviço da API
+  final TrocaService _trocaService = TrocaService(); // Novo service específico
 
   @override
   void initState() {
     super.initState();
-    _loadVendas(); // Carrega as vendas ao inicializar
+    _loadTrocas(); // Carrega as trocas ao inicializar
   }
 
-  Future<void> _loadVendas() async {
+  Future<void> _loadTrocas() async {
     setState(() {
-      isLoading = true; // Mostra o indicador de carregamento
+      isLoading = true;
     });
 
     try {
-      // Chamada ao serviço para buscar vendas
-      final fetchedVendas = await apiService.getVendas();
+      final fetchedTrocas = await _trocaService.getTrocas();
       setState(() {
-        vendas = fetchedVendas;
+        trocas = fetchedTrocas;
       });
     } catch (e) {
       // ignore: use_build_context_synchronously
@@ -57,9 +56,9 @@ class _TrocaState extends State<Troca> {
   }
 
   // Método para criar os botões com o formato desejado
-  Widget _buildVendaItem(double screenWidth, dynamic venda) {
+  Widget _buildVendaItem(double screenWidth, dynamic troca) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaçamento entre os botões
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: SizedBox(
         width: screenWidth * 0.85,
         child: ElevatedButton(
@@ -68,11 +67,13 @@ class _TrocaState extends State<Troca> {
             backgroundColor: const Color.fromARGB(255, 83, 79, 79),
           ),
           onPressed: () {
-            // Navega para a tela TrocaDetalhes passando a venda selecionada
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => Troca2(troca: venda), // Passando a venda
+                builder: (context) => Troca2(
+                  troca: troca,
+                  trocaService: _trocaService,
+                ),
               ),
             );
           },
@@ -80,17 +81,17 @@ class _TrocaState extends State<Troca> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Dia: ${formatarDia(venda['data'])}', // Formata a data para mostrar apenas o dia
+                'Dia: ${formatarDia(troca['data'])}',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                  fontSize: screenWidth * 0.05,
                 ),
               ),
               Text(
-                'Total: R\$ ${venda['total'] ?? '0.00'}', // Mostra apenas o total
+                'Total: R\$ ${troca['total'] ?? '0.00'}',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: screenWidth * 0.05, // Tamanho responsivo
+                  fontSize: screenWidth * 0.05,
                 ),
               ),
             ],
@@ -117,20 +118,20 @@ class _TrocaState extends State<Troca> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : vendas.isEmpty
+          : trocas.isEmpty
               ? const Center(
                   child: Text(
-                    'Nenhuma troca encontrada',
+                    'Nenhuma troca encontradaaaaa',
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                 )
               : ListView.builder(
-                  itemCount: vendas.length,
+                  itemCount: trocas.length,
                   itemBuilder: (context, index) {
-                    final venda = vendas[index];
+                    final troca = trocas[index];
                     return _buildVendaItem(
-                      MediaQuery.of(context).size.width, // Passando o screenWidth para o método
-                      venda,
+                      MediaQuery.of(context).size.width,
+                      troca,
                     );
                   },
                 ),

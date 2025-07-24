@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/fechamento_detalhes.dart'; // Tela de detalhes
-import 'package:flutter_application_2/services/vendas_service.dart'; // Serviço para buscar vendas
-import 'package:intl/intl.dart'; // Para formatar a data
+import 'package:flutter_application_2/fechamento_detalhes.dart';
+import 'package:flutter_application_2/services/fechamento_service.dart';
+import 'package:intl/intl.dart';
 
 class Fechamento extends StatefulWidget {
   const Fechamento({super.key});
@@ -12,26 +12,25 @@ class Fechamento extends StatefulWidget {
 }
 
 class _FechamentoState extends State<Fechamento> {
-  List<dynamic> vendas = []; // Lista para armazenar vendas
+  List<dynamic> fechamentos = []; // Lista para armazenar fechamentos
   bool isLoading = true; // Indica se os dados estão sendo carregados
-  final ApiService apiService = ApiService(); // Serviço da API
+  final FechamentoService _fechamentoService = FechamentoService(); // Novo service específico
 
   @override
   void initState() {
     super.initState();
-    _loadVendas(); // Carrega as vendas ao inicializar
+    _loadFechamentos(); // Carrega os fechamentos ao inicializar
   }
 
-  Future<void> _loadVendas() async {
+  Future<void> _loadFechamentos() async {
     setState(() {
-      isLoading = true; // Mostra o indicador de carregamento
+      isLoading = true;
     });
 
     try {
-      // Chamada à API para buscar vendas
-      final fetchedVendas = await apiService.getVendas();
+      final fetchedFechamentos = await _fechamentoService.getFechamentos();
       setState(() {
-        vendas = fetchedVendas;
+        fechamentos = fetchedFechamentos;
       });
     } catch (e) {
       // ignore: use_build_context_synchronously
@@ -117,20 +116,20 @@ class _FechamentoState extends State<Fechamento> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : vendas.isEmpty
+          : fechamentos.isEmpty
               ? const Center(
                   child: Text(
-                    'Nenhuma venda encontrada',
+                    'Nenhum fechamento encontrado',
                     style: TextStyle(color: Colors.white, fontSize: 20),
                   ),
                 )
               : ListView.builder(
-                  itemCount: vendas.length,
+                  itemCount: fechamentos.length,
                   itemBuilder: (context, index) {
-                    final venda = vendas[index];
+                    final fechamento = fechamentos[index];
                     return _buildVendaItem(
-                      MediaQuery.of(context).size.width, // Passando o screenWidth para o método
-                      venda,
+                      MediaQuery.of(context).size.width,
+                      fechamento,
                     );
                   },
                 ),

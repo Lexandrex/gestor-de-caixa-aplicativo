@@ -7,9 +7,13 @@ const Color corAppBar = Color(0xFF20805F);
 
 class Gastos2 extends StatefulWidget {
   final Map<String, dynamic> gasto;
+  final GastoService gastoService;
 
-  // ignore: use_super_parameters
-  const Gastos2({Key? key, required this.gasto}) : super(key: key);
+  const Gastos2({
+    super.key, 
+    required this.gasto,
+    required this.gastoService,
+  });
 
   @override
   // ignore: library_private_types_in_public_api
@@ -64,32 +68,35 @@ class _Gastos2State extends State<Gastos2> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton(
-                  onPressed: () async {
-                    // Atualizar gasto no Supabase
-                    GastoService gastoService = GastoService();
-                    try {
-                      await gastoService.updateGasto(
-                        widget.gasto['id'], // Usando o ID do gasto original
-                        double.parse(_valorController.text),
-                        _descricaoController.text,
-                      );
-                      // ignore: use_build_context_synchronously
-                      Navigator.pop(context, true); // Indica sucesso ao voltar
-                    } catch (e) {
-                      _showErrorDialog('Erro ao salvar: $e');
-                    }
-                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: corAppBar,
                   ),
+                  onPressed: () async {
+                    try {
+                      // Atualiza os dados usando o service
+                      await widget.gastoService.updateGasto(
+                        widget.gasto['id'],
+                        valor: double.parse(_valorController.text),
+                        descricao: _descricaoController.text,
+                      );
+
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context); // Volta para a tela anterior
+                    } catch (e) {
+                      print('Erro ao atualizar gasto: $e');
+                      // Mostra mensagem de erro
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erro ao atualizar: $e')),
+                      );
+                    }
+                  },
                   child: const Text('Salvar Alterações', style: TextStyle(color: corTexto)),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    // Excluir gasto no Supabase
-                    GastoService gastoService = GastoService();
                     try {
-                      await gastoService.deleteGasto(widget.gasto['id']);
+                      // Usa o service que foi passado como parâmetro
+                      await widget.gastoService.deleteGasto(widget.gasto['id']);
                       // ignore: use_build_context_synchronously
                       Navigator.pop(context, true); // Indica sucesso ao voltar
                     } catch (e) {

@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_application_2/fechamento.dart';
@@ -7,7 +5,9 @@ import 'package:flutter_application_2/gastos.dart';
 import 'package:flutter_application_2/fornecedor.dart';
 import 'package:flutter_application_2/troca.dart';
 import 'package:intl/intl.dart';
-import 'relatorio2.dart'; // Importe a tela RELATORIO2
+import 'relatorio2.dart';
+import 'services/vendas_service.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +43,7 @@ class Tela1 extends StatefulWidget {
 }
 
 class _Tela1State extends State<Tela1> {
+  final VendasService _vendasService = VendasService();
   bool _isExpanded = false;
   int? _selectedLoja; // Loja selecionada
   String? _selectedMes; // Mês selecionado (yyyy-MM)
@@ -65,8 +66,12 @@ class _Tela1State extends State<Tela1> {
 
   Future<void> _fetchVendasELojas() async {
     setState(() { _loading = true; });
-    final vendas = await getVendas();
-    final lojas = await getLojas();
+    final vendas = await _vendasService.getVendas(
+      lojaId: _selectedLoja,
+      mes: _selectedMes,
+      dia: _selectedDia
+    );
+    final lojas = await _vendasService.getLojas();
     setState(() {
       _vendas = vendas;
       _lojas = lojas;
@@ -75,42 +80,6 @@ class _Tela1State extends State<Tela1> {
       _selectedDia = null;
       _loading = false;
     });
-  }
-
-  // Função para buscar as vendas do Supabase
-  Future<List<dynamic>> getVendas() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('vendas') // Nome da tabela no Supabase
-          .select(); // Realiza a consulta
-
-      // Se a resposta for vazia ou não for lista, retorna uma lista vazia
-      if (response.isEmpty) {
-        print('Nenhuma venda encontrada.');
-        return [];
-      }
-
-      // Retorna os dados como lista
-      return response as List<dynamic>;
-    } catch (e) {
-      // Em caso de erro, imprime e retorna uma lista vazia
-      print('Erro ao buscar vendas: $e');
-      return [];
-    }
-  }
-
-  // Busca as lojas do Supabase
-  Future<List<Map<String, dynamic>>> getLojas() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('lojas')
-          .select();
-      if (response.isEmpty) return [];
-      return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      print('Erro ao buscar lojas: $e');
-      return [];
-    }
   }
 
   @override
@@ -353,58 +322,4 @@ class _Tela1State extends State<Tela1> {
     );
   }
 
-  // Método para exibir um item de venda com informações fixas
-  Widget _buildVendaItem(double screenWidth, dynamic venda) {
-    // Formata a data para exibir apenas o dia
-    String formatarDia(String? data) {
-      if (data == null) return 'Não informado';
-      try {
-        final parsedDate = DateTime.parse(data); // Converte a string em DateTime
-        return DateFormat('dd').format(parsedDate); // Formata para exibir apenas o dia
-      } catch (e) {
-        return 'Inválido'; // Caso a conversão falhe
-      }
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0), // Espaçamento entre os botões
-      child: SizedBox(
-        width: screenWidth * 0.85,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            fixedSize: Size(screenWidth * 0.85, 73),
-            backgroundColor: const Color.fromARGB(255, 83, 79, 79),
-          ),
-          onPressed: () {
-            // Navega para a tela RELATORIO2 passando apenas a venda selecionada como lista
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => RELATORIO2(vendas: [venda], dia: venda['data'] ?? ''),
-              ),
-            );
-          },
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Dia: ${formatarDia(venda['data'])}', // Formata a data para mostrar apenas o dia
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: screenWidth * 0.05, // Tamanho responsivo
-                ),
-              ),
-              Text(
-                'Total: R\$ ${venda['total'] ?? '0.00'}', // Mostra apenas o total
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: screenWidth * 0.05, // Tamanho responsivo
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

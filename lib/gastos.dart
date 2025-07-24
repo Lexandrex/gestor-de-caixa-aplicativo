@@ -1,9 +1,9 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'gastos2.dart';
+import 'services/gastos_service.dart';
 
 // ignore: use_key_in_widget_constructors
 class GastosScreen extends StatefulWidget {
@@ -13,21 +13,12 @@ class GastosScreen extends StatefulWidget {
 }
 
 class _GastosScreenState extends State<GastosScreen> {
-  // Função para buscar os dados da tabela "gastos" no Supabase
+  final GastoService _gastoService = GastoService();
+  
+  // Função para buscar os gastos usando o service
   Future<List<dynamic>> getGastos() async {
     try {
-      final response = await Supabase.instance.client
-          .from('gastos') // Nome da tabela no Supabase
-          .select(); // Realiza a consulta
-
-      // Se não houver dados ou a resposta for vazia, retornamos uma lista vazia
-      if (response.isEmpty) {
-        print('Nenhum gasto encontrado.');
-        return [];
-      }
-
-      // Retorna os dados como lista
-      return response as List<dynamic>;
+      return await _gastoService.getGastos();
     } catch (e) {
       print('Erro ao buscar gastos: $e');
       return [];
@@ -91,24 +82,16 @@ class _GastosScreenState extends State<GastosScreen> {
                 DateTime dataAtual = DateTime.now();
                 
                 // Formatando a data e hora
-                String dataFormatada = DateFormat('yyyy-MM-dd HH:mm:ss').format(dataAtual); // Para a data
-                String horaFormatada = DateFormat('HH:mm:ss').format(dataAtual); // Para a hora
+                String dataFormatada = DateFormat('yyyy-MM-dd HH:mm:ss').format(dataAtual);
+                String horaFormatada = DateFormat('HH:mm:ss').format(dataAtual);
 
-                // Enviando os dados para o Supabase
-                final response = await Supabase.instance.client
-                    .from('gastos')
-                    .insert([
-                      {
-                        'quantidade': valor,
-                        'descricao': descricao,
-                        'data': dataFormatada, // Envia a data com hora
-                        'hora': horaFormatada, // Envia a hora formatada
-                      }
-                    ]);
-
-                if (response.error != null) {
-                  throw Exception(response.error!.message);
-                }
+                // Usando o service para criar o gasto
+                await _gastoService.criarGasto(
+                  valor: valor,
+                  descricao: descricao,
+                  data: dataFormatada,
+                  hora: horaFormatada
+                );
 
                 // ignore: use_build_context_synchronously
                 Navigator.of(context).pop();
@@ -200,12 +183,16 @@ class _GastosScreenState extends State<GastosScreen> {
             backgroundColor: const Color.fromARGB(255, 83, 79, 79),
           ),
           onPressed: () {
-            Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => Gastos2(gasto: gasto), // Passando o gasto selecionado
-  ),
-);
+            // Navega para a tela de detalhes com o gasto selecionado
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Gastos2(
+          gasto: gasto,
+          gastoService: _gastoService, // Passa o service para a tela de detalhes
+        ),
+      ),
+    );
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
