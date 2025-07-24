@@ -8,16 +8,13 @@ import 'package:intl/intl.dart';
 import 'relatorio2.dart';
 import 'services/vendas_service.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializando o Supabase
   await Supabase.initialize(
     url: 'https://npvyxmorsaitlpscbcgq.supabase.co', 
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnl4bW9yc2FpdGxwc2NiY2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTAyMDEsImV4cCI6MjA2MTAyNjIwMX0.VSLgSvLOYgEhul-QbXXIb4r91HD6_r76__QzElzOulM', // Substitua pela sua chave pública do Supabase
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnl4bW9yc2FpdGxwc2NiY2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTAyMDEsImV4cCI6MjA2MTAyNjIwMX0.VSLgSvLOYgEhul-QbXXIb4r91HD6_r76__QzElzOulM',
   );
-
 
   runApp(const Atividade());
 }
@@ -29,7 +26,7 @@ class Atividade extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Atividade',
-      home: Tela1(), // Define a Tela1 como a tela inicial
+      home: Tela1(),
     );
   }
 }
@@ -38,24 +35,45 @@ class Tela1 extends StatefulWidget {
   const Tela1({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _Tela1State createState() => _Tela1State();
+  State<Tela1> createState() => _Tela1State();
 }
 
 class _Tela1State extends State<Tela1> {
   final VendasService _vendasService = VendasService();
   bool _isExpanded = false;
-  int? _selectedLoja; // Loja selecionada
-  String? _selectedMes; // Mês selecionado (yyyy-MM)
-  String? _selectedDia; // Dia selecionado (yyyy-MM-dd)
-  List<dynamic> _vendas = [];
-  List<Map<String, dynamic>> _lojas = []; // Agora armazena id e nome
-  bool _loading = true;
+  bool _loading = false;
+  List<Map<String, dynamic>> _lojas = [];
+  int? _selectedLoja;
+  String? _selectedMes;
+  String? _selectedDia;
 
   @override
   void initState() {
     super.initState();
-    _fetchVendasELojas();
+    _fetchLojas();
+  }
+
+  Future<void> _fetchLojas() async {
+    setState(() {
+      _loading = true;
+    });
+
+    try {
+      final lojas = await _vendasService.getLojas();
+      setState(() {
+        _lojas = lojas;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar lojas: $e')),
+        );
+      }
+    }
   }
 
   void _toggleExpansion() {
@@ -64,22 +82,316 @@ class _Tela1State extends State<Tela1> {
     });
   }
 
-  Future<void> _fetchVendasELojas() async {
-    setState(() { _loading = true; });
-    final vendas = await _vendasService.getVendas(
-      lojaId: _selectedLoja,
-      mes: _selectedMes,
-      dia: _selectedDia
+  Widget _buildLojaDropdown(double screenWidth) {
+    if (_lojas.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: const Text('Nenhuma loja cadastrada', style: TextStyle(color: Colors.white)),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF20805F),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white, width: 2),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _selectedLoja,
+          isExpanded: true,
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          dropdownColor: const Color(0xFF20805F),
+          style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.045),
+          hint: const Text('Selecione a loja', style: TextStyle(color: Colors.white)),
+          items: _lojas.map((loja) => DropdownMenuItem(
+            value: loja['id'] as int,
+            child: Text(loja['nome'] ?? 'Loja ${loja['id']}', style: const TextStyle(color: Colors.white)),
+          )).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedLoja = value;
+              _selectedMes = null;
+              _selectedDia = null;
+            });
+          },
+        ),
+      ),
     );
-    final lojas = await _vendasService.getLojas();
-    setState(() {
-      _vendas = vendas;
-      _lojas = lojas;
-      _selectedLoja = lojas.isNotEmpty ? lojas.first['id'] as int : null;
-      _selectedMes = null;
-      _selectedDia = null;
-      _loading = false;
-    });
+  }
+
+  Widget _buildMesDropdown(double screenWidth) {
+    return FutureBuilder<List<String>>(
+      future: _vendasService.getMesesComVendas(lojaId: _selectedLoja),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+
+        if (snapshot.hasError) {
+          return Text('Erro: ${snapshot.error}',
+            style: const TextStyle(color: Colors.white)
+          );
+        }
+
+        final meses = snapshot.data ?? [];
+        if (meses.isEmpty) {
+          return const Text(
+            'Nenhum mês encontrado',
+            style: TextStyle(color: Colors.white)
+          );
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF20805F),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedMes,
+              isExpanded: true,
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+              dropdownColor: const Color(0xFF20805F),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.045
+              ),
+              hint: const Text(
+                'Selecione o mês',
+                style: TextStyle(color: Colors.white)
+              ),
+              items: meses.map((mes) => DropdownMenuItem(
+                value: mes,
+                child: Text(
+                  DateFormat('MM/yyyy').format(DateTime.parse('$mes-01')),
+                  style: const TextStyle(color: Colors.white)
+                ),
+              )).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedMes = value;
+                  _selectedDia = null;
+                });
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDiaDropdown(double screenWidth) {
+    if (_selectedMes == null) return Container();
+
+    return FutureBuilder<List<String>>(
+      future: _vendasService.getDiasComVendas(_selectedMes!, lojaId: _selectedLoja),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+
+        if (snapshot.hasError) {
+          return Text('Erro: ${snapshot.error}',
+            style: const TextStyle(color: Colors.white)
+          );
+        }
+
+        final dias = snapshot.data ?? [];
+        if (dias.isEmpty) {
+          return const Text(
+            'Nenhum dia encontrado',
+            style: TextStyle(color: Colors.white)
+          );
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF20805F),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedDia,
+              isExpanded: true,
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+              dropdownColor: const Color(0xFF20805F),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: screenWidth * 0.045
+              ),
+              hint: const Text(
+                'Selecione o dia',
+                style: TextStyle(color: Colors.white)
+              ),
+              items: dias.map((dia) => DropdownMenuItem(
+                value: dia,
+                child: Text(
+                  DateFormat('dd/MM/yyyy').format(DateTime.parse(dia)),
+                  style: const TextStyle(color: Colors.white)
+                ),
+              )).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedDia = value;
+                });
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildVendasList(double screenWidth) {
+    if (_selectedLoja == null) {
+      return const Center(
+        child: Text(
+          'Selecione uma loja para ver os relatórios',
+          style: TextStyle(color: Colors.white)
+        ),
+      );
+    }
+
+    return FutureBuilder<List<dynamic>>(
+      future: _vendasService.getVendas(
+        lojaId: _selectedLoja,
+        mes: _selectedMes,
+        dia: _selectedDia
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Erro: ${snapshot.error}',
+              style: const TextStyle(color: Colors.white)
+            ),
+          );
+        }
+
+        final vendas = snapshot.data ?? [];
+        if (vendas.isEmpty) {
+          return const Center(
+            child: Text(
+              'Nenhuma venda encontrada',
+              style: TextStyle(color: Colors.white)
+            ),
+          );
+        }
+
+        if (_selectedDia != null) {
+          // Mostra vendas do dia
+          return ListView.builder(
+            itemCount: vendas.length,
+            itemBuilder: (context, index) {
+              final venda = vendas[index];
+              return ListTile(
+                title: Text(
+                  'Venda #${venda['id']}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: screenWidth * 0.05
+                  ),
+                ),
+                subtitle: Text(
+                  'Total: R\$ ${venda['total']}',
+                  style: const TextStyle(color: Colors.white70)
+                ),
+                tileColor: const Color(0xFF53504F),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RELATORIO2(
+                        vendas: [venda],
+                        dia: venda['data']
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        }
+
+        // Agrupa vendas por dia
+        final vendasPorDia = <String, List<dynamic>>{};
+        for (var venda in vendas) {
+          final data = venda['data'] as String;
+          if (!vendasPorDia.containsKey(data)) {
+            vendasPorDia[data] = [];
+          }
+          vendasPorDia[data]!.add(venda);
+        }
+
+        final dias = vendasPorDia.keys.toList()..sort();
+        return ListView.builder(
+          itemCount: dias.length,
+          itemBuilder: (context, index) {
+            final dia = dias[index];
+            final vendasDoDia = vendasPorDia[dia]!;
+            final total = vendasDoDia.fold<double>(
+              0,
+              (sum, venda) => sum + (double.tryParse(venda['total'].toString()) ?? 0)
+            );
+
+            return ListTile(
+              title: Text(
+                DateFormat('dd/MM/yyyy').format(DateTime.parse(dia)),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.05
+                ),
+              ),
+              subtitle: Text(
+                'Vendas: ${vendasDoDia.length} - Total: R\$ ${total.toStringAsFixed(2)}',
+                style: const TextStyle(color: Colors.white70)
+              ),
+              tileColor: const Color(0xFF53504F),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RELATORIO2(
+                      vendas: vendasDoDia,
+                      dia: dia
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNavButton(String label, Widget destination, double screenWidth) {
+    return TextButton(
+      onPressed: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => destination),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: screenWidth * 0.035,
+        ),
+      ),
+    );
   }
 
   @override
@@ -92,27 +404,27 @@ class _Tela1State extends State<Tela1> {
         title: Text(
           'RELATÓRIO',
           style: TextStyle(
-            color: const Color.fromARGB(255, 255, 255, 255),
-            fontSize: screenWidth * 0.08, // Tamanho de fonte do AppBar
+            color: Colors.white,
+            fontSize: screenWidth * 0.08,
           ),
         ),
         backgroundColor: const Color(0xFF20805F),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: _toggleExpansion, // Chama a função ao clicar no ícone
+          onPressed: _toggleExpansion,
         ),
       ),
       body: Column(
         children: [
-          if (_isExpanded) // Exibe as opções se estiver expandido
+          if (_isExpanded)
             Container(
               color: const Color(0xFF20805F),
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavButton('GASTOS',  GastosScreen(), screenWidth),
+                  _buildNavButton('GASTOS', GastosScreen(), screenWidth),
                   _buildNavButton('FORNECEDOR', const FornecedorScreen(), screenWidth),
                   _buildNavButton('FECHAMENTO', const Fechamento(), screenWidth),
                   _buildNavButton('TROCA', const Troca(), screenWidth),
@@ -142,184 +454,4 @@ class _Tela1State extends State<Tela1> {
       ),
     );
   }
-
-  Widget _buildLojaDropdown(double screenWidth) {
-    // Se não há lojas, mostra mensagem
-    if (_lojas.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        child: const Text('Nenhuma loja cadastrada', style: TextStyle(color: Colors.white)),
-      );
-    }
-    return GestureDetector(
-      onTap: () {}, // Garante que o Container seja "clicável"
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF20805F),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<int>(
-            value: _selectedLoja,
-            isExpanded: true,
-            icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-            dropdownColor: const Color(0xFF20805F),
-            style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.045),
-            hint: const Text('Selecione a loja', style: TextStyle(color: Colors.white)),
-            items: _lojas.map((loja) => DropdownMenuItem(
-              value: loja['id'] as int,
-              child: Text(loja['nome'] ?? 'Loja ${loja['id']}', style: const TextStyle(color: Colors.white)),
-            )).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedLoja = value;
-                _selectedMes = null;
-                _selectedDia = null;
-              });
-            },
-            // Habilita o Dropdown apenas se houver lojas
-            disabledHint: const Text('Nenhuma loja disponível', style: TextStyle(color: Colors.white)),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMesDropdown(double screenWidth) {
-    final meses = _vendas
-        .where((v) => v['loja'] == _selectedLoja)
-        .map<String>((v) => v['data']?.substring(0, 7) ?? '')
-        .toSet()
-        .where((m) => m.isNotEmpty)
-        .toList()
-      ..sort();
-    return DropdownButton<String>(
-      value: _selectedMes,
-      hint: const Text('Selecione o mês', style: TextStyle(color: Colors.white)),
-      dropdownColor: const Color(0xFF20805F),
-      style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.045),
-      items: meses.map((mes) => DropdownMenuItem(
-        value: mes,
-        child: Text(DateFormat('MM/yyyy').format(DateTime.parse('$mes-01'))),
-      )).toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedMes = value;
-          _selectedDia = null;
-        });
-      },
-    );
-  }
-
-  Widget _buildDiaDropdown(double screenWidth) {
-    final dias = _vendas
-        .where((v) => v['loja'] == _selectedLoja && v['data']?.startsWith(_selectedMes ?? ''))
-        .map<String>((v) => v['data'] ?? '')
-        .toSet()
-        .where((d) => d.isNotEmpty)
-        .toList()
-      ..sort();
-    return DropdownButton<String>(
-      value: _selectedDia,
-      hint: const Text('Selecione o dia', style: TextStyle(color: Colors.white)),
-      dropdownColor: const Color(0xFF20805F),
-      style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.045),
-      items: dias.map((dia) => DropdownMenuItem(
-        value: dia,
-        child: Text(DateFormat('dd/MM/yyyy').format(DateTime.parse(dia))),
-      )).toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedDia = value;
-        });
-      },
-    );
-  }
-
-  Widget _buildVendasList(double screenWidth) {
-    List<dynamic> vendasFiltradas = _vendas;
-    if (_selectedLoja != null) {
-      vendasFiltradas = vendasFiltradas.where((v) => v['loja'] == _selectedLoja).toList();
-    }
-    if (_selectedMes != null) {
-      vendasFiltradas = vendasFiltradas.where((v) => v['data']?.startsWith(_selectedMes ?? '')).toList();
-    }
-    if (_selectedDia == null && _selectedMes != null) {
-      // Mostra lista de dias do mês
-      final dias = vendasFiltradas.map<String>((v) => v['data'] ?? '').toSet().toList()..sort();
-      if (dias.isEmpty) {
-        return const Center(child: Text('Nenhum dia encontrado', style: TextStyle(color: Colors.white)));
-      }
-      return ListView.builder(
-        itemCount: dias.length,
-        itemBuilder: (context, index) {
-          final dia = dias[index];
-          final vendasDoDia = vendasFiltradas.where((v) => v['data'] == dia).toList();
-          return ListTile(
-            title: Text(DateFormat('dd/MM/yyyy').format(DateTime.parse(dia)), style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.05)),
-            subtitle: Text('Vendas: ${vendasDoDia.length}', style: const TextStyle(color: Colors.white70)),
-            tileColor: const Color(0xFF53504F),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RELATORIO2(vendas: vendasDoDia, dia: dia),
-                ),
-              );
-            },
-          );
-        },
-      );
-    }
-    if (_selectedMes == null && _selectedLoja != null) {
-      // Mostra lista de meses
-      final meses = vendasFiltradas.map<String>((v) => v['data']?.substring(0, 7) ?? '').toSet().toList()..sort();
-      if (meses.isEmpty) {
-        return const Center(child: Text('Nenhum mês encontrado', style: TextStyle(color: Colors.white)));
-      }
-      return ListView.builder(
-        itemCount: meses.length,
-        itemBuilder: (context, index) {
-          final mes = meses[index];
-          final vendasDoMes = vendasFiltradas.where((v) => v['data']?.startsWith(mes)).toList();
-          return ListTile(
-            title: Text(DateFormat('MM/yyyy').format(DateTime.parse('$mes-01')), style: TextStyle(color: Colors.white, fontSize: screenWidth * 0.05)),
-            subtitle: Text('Vendas: ${vendasDoMes.length}', style: const TextStyle(color: Colors.white70)),
-            tileColor: const Color(0xFF53504F),
-            onTap: () {
-              setState(() {
-                _selectedMes = mes;
-                _selectedDia = null;
-              });
-            },
-          );
-        },
-      );
-    }
-    // Se nada selecionado, mostra instrução
-    return const Center(child: Text('Selecione uma loja para ver os relatórios', style: TextStyle(color: Colors.white)));
-  }
-
-  // Método para criar um botão de navegação
-  Widget _buildNavButton(String label, Widget destination, double screenWidth) {
-    return SizedBox(
-      child: TextButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => destination),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: screenWidth * 0.035,
-          ),
-        ),
-      ),
-    );
-  }
-
 }

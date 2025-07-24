@@ -4,27 +4,22 @@ class VendasService extends BaseService {
 
   // Função para obter vendas (com filtros opcionais)
   Future<List<dynamic>> getVendas({int? lojaId, String? mes, String? dia}) async {
-    try {
-      var query = supabase.from('vendas').select();
-      
-      if (lojaId != null) {
-        query = query.eq('loja', lojaId);
-      }
-      if (mes != null) {
-        query = query.ilike('data', '$mes%');
-      }
-      if (dia != null) {
-        query = query.eq('data', dia);
-      }
+    return getRegistros(
+      'vendas',
+      lojaId: lojaId,
+      mes: mes,
+      dia: dia,
+    );
+  }
 
-      final response = await query;
-      if (response.isEmpty) {
-        throw Exception('Nenhuma venda encontrada');
-      }
-      return response;
-    } catch (e) {
-      throw Exception('Erro ao buscar vendas: $e');
-    }
+  // Função para obter meses com vendas
+  Future<List<String>> getMesesComVendas({int? lojaId}) async {
+    return getMesesDisponiveis('vendas', lojaId: lojaId);
+  }
+
+  // Função para obter dias com vendas em um mês específico
+  Future<List<String>> getDiasComVendas(String mes, {int? lojaId}) async {
+    return getDiasDisponiveis('vendas', mes, lojaId: lojaId);
   }
 
   // Busca todas as lojas
