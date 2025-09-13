@@ -5,6 +5,7 @@ import 'package:flutter_application_2/gastos.dart';
 import 'package:flutter_application_2/fornecedor.dart';
 import 'package:flutter_application_2/troca.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'relatorio2.dart';
 import 'services/vendas_service.dart';
 
@@ -44,8 +45,8 @@ class _Tela1State extends State<Tela1> {
   bool _loading = false;
   List<Map<String, dynamic>> _lojas = [];
   int? _selectedLoja;
-  String? _selectedMes;
-  String? _selectedDia;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
 
   @override
   void initState() {
@@ -113,8 +114,7 @@ class _Tela1State extends State<Tela1> {
           onChanged: (value) {
             setState(() {
               _selectedLoja = value;
-              _selectedMes = null;
-              _selectedDia = null;
+              _selectedDay = null;
             });
           },
         ),
@@ -122,133 +122,88 @@ class _Tela1State extends State<Tela1> {
     );
   }
 
-  Widget _buildMesDropdown(double screenWidth) {
-    return FutureBuilder<List<String>>(
-      future: _vendasService.getMesesComVendas(lojaId: _selectedLoja),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        }
-
-        if (snapshot.hasError) {
-          return Text('Erro: ${snapshot.error}',
-            style: const TextStyle(color: Colors.white)
-          );
-        }
-
-        final meses = snapshot.data ?? [];
-        if (meses.isEmpty) {
-          return const Text(
-            'Nenhum mês encontrado',
-            style: TextStyle(color: Colors.white)
-          );
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF20805F),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedMes,
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-              dropdownColor: const Color(0xFF20805F),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: screenWidth * 0.045
-              ),
-              hint: const Text(
-                'Selecione o mês',
-                style: TextStyle(color: Colors.white)
-              ),
-              items: meses.map((mes) => DropdownMenuItem(
-                value: mes,
-                child: Text(
-                  DateFormat('MM/yyyy').format(DateTime.parse('$mes-01')),
-                  style: const TextStyle(color: Colors.white)
+  Future<void> _showCalendarDialog(BuildContext context) async {
+    final selectedDate = await showDialog<DateTime>(
+      context: context,
+      builder: (BuildContext context) {
+        DateTime? tempSelectedDay = _selectedDay;
+        DateTime tempFocusedDay = _focusedDay;
+        
+        return Dialog(
+          backgroundColor: const Color(0xFF393636),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: TableCalendar(
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: tempFocusedDay,
+                  selectedDayPredicate: (day) {
+                    return tempSelectedDay != null && 
+                      isSameDay(tempSelectedDay, day);
+                  },
+                  onDaySelected: (selectedDay, focusedDay) {
+                    tempSelectedDay = selectedDay;
+                    tempFocusedDay = focusedDay;
+                    Navigator.of(context).pop(selectedDay);
+                  },
+                  calendarFormat: CalendarFormat.month,
+                  headerStyle: const HeaderStyle(
+                    titleTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    formatButtonVisible: false,
+                    leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+                    rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+                  ),
+                  calendarStyle: const CalendarStyle(
+                    defaultTextStyle: TextStyle(color: Colors.white),
+                    weekendTextStyle: TextStyle(color: Colors.white70),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    selectedTextStyle: TextStyle(color: Color(0xFF20805F)),
+                    todayDecoration: BoxDecoration(
+                      color: Colors.white38,
+                      shape: BoxShape.circle,
+                    ),
+                    todayTextStyle: TextStyle(color: Colors.white),
+                  ),
+                  daysOfWeekStyle: const DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(color: Colors.white),
+                    weekendStyle: TextStyle(color: Colors.white70),
+                  ),
                 ),
-              )).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedMes = value;
-                  _selectedDia = null;
-                });
-              },
-            ),
+              ),
+              ButtonBar(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(null),
+                    child: const Text('Cancelar', style: TextStyle(color: Colors.white)),
+                  ),
+                  if (tempSelectedDay != null)
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(tempSelectedDay),
+                      child: const Text('OK', style: TextStyle(color: Colors.white)),
+                    ),
+                ],
+              ),
+            ],
           ),
         );
       },
     );
-  }
 
-  Widget _buildDiaDropdown(double screenWidth) {
-    if (_selectedMes == null) return Container();
-
-    return FutureBuilder<List<String>>(
-      future: _vendasService.getDiasComVendas(_selectedMes!, lojaId: _selectedLoja),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        }
-
-        if (snapshot.hasError) {
-          return Text('Erro: ${snapshot.error}',
-            style: const TextStyle(color: Colors.white)
-          );
-        }
-
-        final dias = snapshot.data ?? [];
-        if (dias.isEmpty) {
-          return const Text(
-            'Nenhum dia encontrado',
-            style: TextStyle(color: Colors.white)
-          );
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF20805F),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _selectedDia,
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-              dropdownColor: const Color(0xFF20805F),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: screenWidth * 0.045
-              ),
-              hint: const Text(
-                'Selecione o dia',
-                style: TextStyle(color: Colors.white)
-              ),
-              items: dias.map((dia) => DropdownMenuItem(
-                value: dia,
-                child: Text(
-                  DateFormat('dd/MM/yyyy').format(DateTime.parse(dia)),
-                  style: const TextStyle(color: Colors.white)
-                ),
-              )).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDia = value;
-                });
-              },
-            ),
-          ),
-        );
-      },
-    );
+    if (selectedDate != null) {
+      setState(() {
+        _selectedDay = selectedDate;
+        _focusedDay = selectedDate;
+      });
+    }
   }
 
   Widget _buildVendasList(double screenWidth) {
@@ -264,8 +219,7 @@ class _Tela1State extends State<Tela1> {
     return FutureBuilder<List<dynamic>>(
       future: _vendasService.getVendas(
         lojaId: _selectedLoja,
-        mes: _selectedMes,
-        dia: _selectedDia
+        data: _selectedDay
       ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -283,80 +237,30 @@ class _Tela1State extends State<Tela1> {
 
         final vendas = snapshot.data ?? [];
         if (vendas.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
-              'Nenhuma venda encontrada',
-              style: TextStyle(color: Colors.white)
+              _selectedDay != null 
+                ? 'Nenhuma venda encontrada para ${DateFormat('dd/MM/yyyy').format(_selectedDay!)}'
+                : 'Nenhuma venda encontrada',
+              style: const TextStyle(color: Colors.white)
             ),
           );
         }
 
-        if (_selectedDia != null) {
-          // Mostra vendas do dia
-          return ListView.builder(
-            itemCount: vendas.length,
-            itemBuilder: (context, index) {
-              final venda = vendas[index];
-              return ListTile(
-                title: Text(
-                  'Venda #${venda['id']}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: screenWidth * 0.05
-                  ),
-                ),
-                subtitle: Text(
-                  'Total: R\$ ${venda['total']}',
-                  style: const TextStyle(color: Colors.white70)
-                ),
-                tileColor: const Color(0xFF53504F),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RELATORIO2(
-                        vendas: [venda],
-                        dia: venda['data']
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        }
-
-        // Agrupa vendas por dia
-        final vendasPorDia = <String, List<dynamic>>{};
-        for (var venda in vendas) {
-          final data = venda['data'] as String;
-          if (!vendasPorDia.containsKey(data)) {
-            vendasPorDia[data] = [];
-          }
-          vendasPorDia[data]!.add(venda);
-        }
-
-        final dias = vendasPorDia.keys.toList()..sort();
         return ListView.builder(
-          itemCount: dias.length,
+          itemCount: vendas.length,
           itemBuilder: (context, index) {
-            final dia = dias[index];
-            final vendasDoDia = vendasPorDia[dia]!;
-            final total = vendasDoDia.fold<double>(
-              0,
-              (sum, venda) => sum + (double.tryParse(venda['total'].toString()) ?? 0)
-            );
-
+            final venda = vendas[index];
             return ListTile(
               title: Text(
-                DateFormat('dd/MM/yyyy').format(DateTime.parse(dia)),
+                'Venda #${venda['id']}',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: screenWidth * 0.05
                 ),
               ),
               subtitle: Text(
-                'Vendas: ${vendasDoDia.length} - Total: R\$ ${total.toStringAsFixed(2)}',
+                'Total: R\$ ${venda['total']}',
                 style: const TextStyle(color: Colors.white70)
               ),
               tileColor: const Color(0xFF53504F),
@@ -365,8 +269,8 @@ class _Tela1State extends State<Tela1> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => RELATORIO2(
-                      vendas: vendasDoDia,
-                      dia: dia
+                      vendas: [venda],
+                      dia: venda['data']
                     ),
                   ),
                 );
@@ -438,12 +342,33 @@ class _Tela1State extends State<Tela1> {
           if (_selectedLoja != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildMesDropdown(screenWidth),
-            ),
-          if (_selectedMes != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildDiaDropdown(screenWidth),
+              child: InkWell(
+                onTap: () => _showCalendarDialog(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF20805F),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _selectedDay != null
+                            ? DateFormat('dd/MM/yyyy').format(_selectedDay!)
+                            : 'Selecione uma data',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.045,
+                        ),
+                      ),
+                      const Icon(Icons.calendar_today, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ),
             ),
           Expanded(
             child: _loading

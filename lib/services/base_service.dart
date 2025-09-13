@@ -16,19 +16,6 @@ abstract class BaseService {
     }
   }
 
-  // Função genérica para buscar registros com filtros de data
-  // Função para converter data YYYY-MM-DD para AA/MM/DD
-  String _formatDataParaBanco(String data) {
-    if (data.isEmpty) return data;
-    // Remove hífens e pega apenas os últimos 2 dígitos do ano
-    final partes = data.split('-');
-    if (partes.length == 3) {
-      final ano = partes[0].substring(2); // Pega últimos 2 dígitos
-      return '$ano/${partes[1]}/${partes[2]}';
-    }
-    return data;
-  }
-
   Future<List<dynamic>> getRegistros(String tabela, {
     int? lojaId,
     String? mes,

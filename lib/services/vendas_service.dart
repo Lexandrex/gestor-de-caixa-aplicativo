@@ -2,24 +2,29 @@ import 'base_service.dart';
 
 class VendasService extends BaseService {
 
-  // Função para obter vendas (com filtros opcionais)
-  Future<List<dynamic>> getVendas({int? lojaId, String? mes, String? dia}) async {
-    return getRegistros(
-      'vendas',
-      lojaId: lojaId,
-      mes: mes,
-      dia: dia,
-    );
-  }
+  // Função para obter vendas por data
+  Future<List<dynamic>> getVendas({int? lojaId, DateTime? data}) async {
+    try {
+      var query = supabase.from('vendas').select();
+      
+      if (lojaId != null) {
+        query = query.eq('loja', lojaId);
+      }
+      
+      if (data != null) {
+        // Formata a data para YYYY-MM-DD
+        String dataFormatada = "${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}";
+        query = query.eq('data', dataFormatada);
+      }
 
-  // Função para obter meses com vendas
-  Future<List<String>> getMesesComVendas({int? lojaId}) async {
-    return getMesesDisponiveis('vendas', lojaId: lojaId);
-  }
-
-  // Função para obter dias com vendas em um mês específico
-  Future<List<String>> getDiasComVendas(String mes, {int? lojaId}) async {
-    return getDiasDisponiveis('vendas', mes, lojaId: lojaId);
+      final response = await query;
+      if (response.isEmpty) {
+        return [];
+      }
+      return response;
+    } catch (e) {
+      throw Exception('Erro ao buscar vendas: $e');
+    }
   }
 
   // Busca todas as lojas
